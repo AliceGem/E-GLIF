@@ -2,15 +2,14 @@
 """
 Created on Tue May 15 17:53:43 2018
 
-@author: claudia - modified by alice for IOcerebellar scaffold with E-GLIF neurons and a different stimulation protocol
+@author: Alice Geminiani and Claudia Casellato 
+
 """
 
-# With respect to simulations N we here changed dcnp-io weights and we added a random initialization of Vm for all neurons to avoid initial synchronization
 from __future__ import print_function  # python 2 & 3 compatible
 import os
 import sys
 
-sys.path.append("/home/realnet/workspace/nest-simulator/b/lib/x86_64-linux-gnu/python2.7/site-packages/")
 import time
 import glob
 import logging
@@ -31,7 +30,7 @@ nest.Install("eglif_module")		# To check/change based on the PC where we run the
 CORES = 6
 NODES = 1
 NEU_MOD = 'eglif_cond_alpha_multisyn'            # Neuron model name
-#NEU_MOD = 'iaf_cond_alpha'
+
 
 # Control variables
 RECORDING_CELLS = True
@@ -83,34 +82,6 @@ sd_iomli = 10.0				# IO-MLI weights set as normal distribution to reproduce the 
 min_iomli = 40.0
 
 # Connection weights
-'''
-# All zero weights - only autorhythm
-conn_weights = {'aa_goc': 0.0, 'aa_pc': 0.0, 'bc_pc': 0.0, 'dcnp_io': 0.0, 'gj_bc': 0.0, 'gj_sc': 0.0, 'glom_dcn': 0.0,
-				'glom_goc': 0.0, 'glom_grc': 0.0, 'goc_glom': 0.0, 'gj_goc': 0.0,'goc_grc': 0.0, 'io_dcn': 0.0, 'io_dcnp': 0.0,
-				'io_bc': 0.0,'io_sc': 0.0, 'io_pc': 0.0, 'pc_dcn': 0.0, 'pc_dcnp': 0.0, 'pf_bc': 0.0, 'pf_goc': 0.0,'pf_pc': 0.0,
-				'pf_sc': 0.0, 'sc_pc': 0.0}
-
-
-# Scaffold weights (except Glom-GR) + IO from trial and error
-conn_weights = {'aa_goc': 20.0, 'aa_pc': 75.0, 'bc_pc': -9.0, 'dcnp_io': -1.0, 'gj_bc': -2.5, 'gj_sc': -2.0, 'glom_dcn': 0.006,
-			   'glom_goc': 2.0, 'glom_grc': 0.5, 'goc_glom': 0.0, 'gj_goc': -8.0,'goc_grc': -5.0, 'io_dcn': 2.0, 'io_dcnp': 2.0,
-			   'io_bc': 2.0,'io_sc': 2.0, 'io_pc': 2.0, 'pc_dcn': -0.0075, 'pc_dcnp': -0.0075, 'pf_bc': 0.2, 'pf_goc': 0.4,'pf_pc': 0.02,
-			   'pf_sc': 0.2, 'sc_pc': -8.5}
-
-
-# Tuned weights with EGLIF
-conn_weights = {'aa_goc': 1.2, 'aa_pc': 0.7, 'bc_pc': 0.3, 'dcnp_io': 0.2, 'gj_bc': 0.2, 'gj_sc': 0.2, 'glom_dcn': 0.8,
-				'glom_goc': 1.38, 'glom_grc': 0.1, 'goc_glom': 0.0, 'gj_goc': 0.08,'goc_grc': 0.06, 'io_dcn': 0.1, 'io_dcnp': 0.2,			# -0.48 gjgoc
-				'io_bc': 1.0,'io_sc': 1.0, 'io_pc': 350.0, 'pc_dcn': 0.7, 'pc_dcnp': 0.12, 'pf_bc': 0.015, 'pf_goc': 0.012,'pf_pc': 0.007,
-				'pf_sc': 0.015, 'sc_pc': 0.3}
-
-
-# Tuned weights with EGLIF
-conn_weights = {'aa_goc': 1.2, 'aa_pc': 0.7, 'bc_pc': 0.3, 'dcnp_io': 3.0, 'gj_bc': 0.2, 'gj_sc': 0.2, 'glom_dcn': 0.8,
-				'glom_goc': 1.5, 'glom_grc': 0.15, 'goc_glom': 0.0, 'gj_goc': 0.3,'goc_grc': 0.1, 'io_dcn': 0.1, 'io_dcnp': 0.2,			# -0.48 gjgoc    goc-grc = 2.0
-				'io_bc': 1.0,'io_sc': 1.0, 'io_pc': 350.0, 'pc_dcn': 0.7, 'pc_dcnp': 0.12, 'pf_bc': 0.015, 'pf_goc': 0.05,'pf_pc': 0.007,
-				'pf_sc': 0.015, 'sc_pc': 0.3}
-'''
 # Tuned weights with EGLIF
 conn_weights = {'aa_goc': 1.2, 'aa_pc': 0.7, 'bc_pc': 0.3, 'dcnp_io': 3.0, 'gj_bc': 0.2, 'gj_sc': 0.2, 'glom_dcn': 0.05,
 				'glom_goc': 1.5, 'glom_grc': 0.15, 'goc_glom': 0.0, 'gj_goc': 0.3,'goc_grc': 0.6, 'io_dcn': 0.1, 'io_dcnp': 0.2,			# -0.48 gjgoc    goc-grc = 2.0
@@ -118,17 +89,15 @@ conn_weights = {'aa_goc': 1.2, 'aa_pc': 0.7, 'bc_pc': 0.3, 'dcnp_io': 3.0, 'gj_b
 				'pf_sc': 0.015, 'sc_pc': 0.3}
 
 
-# aux.tic()
 ''' VARIABLES INITIALIZATION '''
 nest.set_verbosity('M_ERROR')
 nest.ResetKernel()
 nest.SetKernelStatus({'local_num_threads': CORES,
                       'total_num_virtual_procs': CORES*NODES,
                       'resolution': 0.01,
-                      'overwrite_files': True,
-					  "data_path": "/home/realnet/Dropbox/EMC_work/CerebSCAFFOLD/baseline_eglif"})
+                      'overwrite_files': True})
 
-# nest.SetNumRecProcesses(1)
+
 msd = 1000  # master seed
 msdrange1 = range(msd, msd + CORES)
 pyrngs = [np.random.RandomState(s) for s in msdrange1]
@@ -138,7 +107,7 @@ msdrange2 = range(msd + CORES + 1, msd + 1 + 2 * CORES)
 nest.SetKernelStatus({'grng_seed': msd + CORES,
                       'rng_seeds': msdrange2})
 
-# Python random (taken from NEST doce on "random_numbers")
+# Python random (taken from NEST doc on "random_numbers")
 N_vp = nest.GetKernelStatus(['total_num_virtual_procs'])[0]
 pyrngs = [np.random.RandomState(s) for s in range(msd,msd+N_vp)]
 #random.seed()
