@@ -36,13 +36,11 @@ NEU_MOD = 'eglif_cond_alpha_multisyn'            # Neuron model name
 RECORDING_CELLS = True
 MULTI_CORE = True
 
-# try:
 from mpi4py import MPI
 
 COMM = MPI.COMM_WORLD
 using_mpi4py = True
-# except ImportError:
-# using_mpi4py = False
+
 
 # PARAMETERS
 # Single neurons
@@ -118,7 +116,7 @@ start_netw = time.time()
 print(start_netw)
 
 
-################## CEREBELLAR NEURONS ############ CHECK PARAMETERS - also passive ones!!! ############################################À
+################## CEREBELLAR NEURONS #######################################################À
 
 filename = 'scaffold_full_IO_400.0x400.0_v3_microzone.hdf5'
 f = h5py.File(filename, 'r+')
@@ -187,7 +185,7 @@ for cell_id in sorted_nrn_types:
 										 'E_L': param_grc['E_L'],  # mV
 										 'lambda_0' : param_grc['lambda'],
 										 'delta_V' : param_grc['deltaV'],
-										 'Ie_const': param_grc['Ie'],  # pA # tonic ~9-10 Hz  ;previous = 36.0 pA
+										 'Ie_const': param_grc['Ie'],  # pA  
 										 'adaptC' :  param_grc['k_adap'],
 										 'k1' : param_grc['k1'],
 										 'k2' : param_grc['k2'],
@@ -335,9 +333,6 @@ for cell_id in sorted_nrn_types:
 	cell_pos = positions[positions[:, 1] == cell_id, :]
 	neuron_models[cell_name] = nest.Create(cell_name, cell_pos.shape[0])
 
-#io_num = len(neuron_models['io'])
-#print(io_num)
-#print(neuron_models['io'][:io_num/2])
 
 # Random initialization  (between EL-half1 and EL+half2; being half1 the half of the range between Vreset and EL, half2 the half of the range between EL and Vth)
 for x in range(1,len(neuron_models['golgi']),2):
@@ -392,7 +387,7 @@ else:
 conn_aa_goc = np.array(f['connections/aa_goc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['aa_goc'], "delay": conn_delays['aa_goc'],"receptor_type":3}
 aa_goc_conn = connect_neuron(conn_aa_goc, neuron_models['granule'], neuron_models['golgi'], syn_param)
-# print("aa_goc: ", rank, len(aa_goc_conn))
+
 
 
 if MULTI_CORE:
@@ -403,7 +398,7 @@ else:
 conn_aa_pc = np.array(f['connections/aa_pc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['aa_pc'], "delay": conn_delays['aa_pc'],"receptor_type":1}
 a_pc_conn = connect_neuron(conn_aa_pc, neuron_models['granule'], neuron_models['purkinje'],syn_param)
-# print("aa_pc: ", rank, len(aa_pc_conn))
+
 
 
 if MULTI_CORE:
@@ -414,7 +409,7 @@ else:
 conn_bc_pc = np.array(f['connections/bc_pc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['bc_pc'], "delay": conn_delays['bc_pc'],"receptor_type":2}  # -5.0
 bc_pc_conn = connect_neuron(conn_bc_pc, neuron_models['basket'], neuron_models['purkinje'], syn_param)
-# print("bc_pc: ", rank, len(bc_pc_conn))
+
 
 
 if MULTI_CORE:
@@ -426,7 +421,7 @@ else:
 conn_gj_bc = np.array(f['connections/gj_bc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['gj_bc'], "delay": conn_delays['gj_bc'],"receptor_type":2}
 gj_bc_conn = connect_neuron(conn_gj_bc, neuron_models['basket'], neuron_models['basket'], syn_param)
-# print("gj_bc: ", rank, len(gj_bc_conn))
+
 
 
 if MULTI_CORE:
@@ -438,7 +433,7 @@ else:
 conn_gj_sc = np.array(f['connections/gj_sc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['gj_sc'], "delay": conn_delays['gj_sc'],"receptor_type":2}
 gj_sc_conn = connect_neuron(conn_gj_sc, neuron_models['stellate'], neuron_models['stellate'], syn_param)
-# print("gj_sc: ", rank, len(gj_sc_conn))
+
 
 
 if MULTI_CORE:
@@ -450,7 +445,7 @@ else:
 conn_glom_goc = np.array(f['connections/glom_goc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['glom_goc'], "delay": conn_delays['glom_goc'],"receptor_type":1}
 glom_goc_conn = connect_neuron(conn_glom_goc, neuron_models['glomerulus'], neuron_models['golgi'], syn_param)
-# print("glom_goc: ", rank, len(glom_goc_conn))
+
 
 
 if MULTI_CORE:
@@ -462,7 +457,7 @@ else:
 conn_glom_grc = np.array(f['connections/glom_grc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['glom_grc'], "delay": conn_delays['glom_grc'],"receptor_type":1}
 glom_grc_conn = connect_neuron(conn_glom_grc, neuron_models['glomerulus'], neuron_models['granule'], syn_param)
-# print("glom_grc: ", rank, len(glom_grc_conn))
+
 
 
 if MULTI_CORE:
@@ -474,7 +469,6 @@ else:
 conn_goc_glom = np.array(f['connections/goc_glom'])
 syn_param = {"model" : "static_synapse", "weight" : conn_weights['goc_glom'], "delay": conn_delays['goc_glom'],"receptor_type":1}
 goc_glom_conn = connect_neuron(conn_goc_glom, neuron_models['golgi'], neuron_models['glomerulus'],syn_param)
-#print("goc_glom: ", rank, len(goc_glom_conn))
 
 
 if MULTI_CORE:
@@ -486,7 +480,7 @@ else:
 conn_gj_goc = np.array(f['connections/gj_goc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['gj_goc'], "delay": conn_delays['gj_goc'],"receptor_type":2}
 gj_goc_conn = connect_neuron(conn_gj_goc, neuron_models['golgi'], neuron_models['golgi'], syn_param)
-# print("goc_grc: ", rank, len(goc_grc_conn))
+
 
 
 if MULTI_CORE:
@@ -498,7 +492,7 @@ else:
 conn_goc_grc = np.array(f['connections/goc_grc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['goc_grc'], "delay": conn_delays['goc_grc'],"receptor_type":2}
 goc_grc_conn = connect_neuron(conn_goc_grc, neuron_models['golgi'], neuron_models['granule'], syn_param)
-# print("goc_grc: ", rank, len(goc_grc_conn))
+
 
 
 if MULTI_CORE:
@@ -510,7 +504,7 @@ else:
 conn_pc_dcn = np.array(f['connections/pc_dcn'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['pc_dcn'], "delay": conn_delays['pc_dcn'],"receptor_type":2}
 pc_dcn_conn = connect_neuron(conn_pc_dcn, neuron_models['purkinje'], neuron_models['dcn'], syn_param)
-# print("pc_dcn: ", rank, len(pc_dcn_conn))
+
 
 
 if MULTI_CORE:
@@ -522,7 +516,7 @@ else:
 conn_pc_dcnp = np.array(f['connections/pc_dcnp'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['pc_dcnp'], "delay": conn_delays['pc_dcnp'],"receptor_type":2}
 pc_dcnp_conn = connect_neuron(conn_pc_dcnp, neuron_models['purkinje'], neuron_models['dcnp'], syn_param)
-# print("pc_dcn: ", rank, len(pc_dcn_conn))
+
 
 
 if MULTI_CORE:
@@ -534,7 +528,7 @@ else:
 conn_pf_bc = np.array(f['connections/pf_bc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['pf_bc'], "delay": conn_delays['pf_bc'],"receptor_type":1}
 pf_bc_conn = connect_neuron(conn_pf_bc, neuron_models['granule'], neuron_models['basket'], syn_param)
-# print("pf_pb: ", rank, len(pf_bc_conn))
+
 
 
 if MULTI_CORE:
@@ -546,7 +540,7 @@ else:
 conn_pf_goc = np.array(f['connections/pf_goc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['pf_goc'], "delay": conn_delays['pf_goc'],"receptor_type":3}  # 10.0
 pf_goc_conn = connect_neuron(conn_pf_goc, neuron_models['granule'], neuron_models['golgi'], syn_param)
-# print("pf_goc: ", rank, len(pf_goc_conn))
+
 
 
 if MULTI_CORE:
@@ -558,7 +552,7 @@ else:
 conn_pf_pc = np.array(f['connections/pf_pc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['pf_pc'], "delay": conn_delays['pf_pc'],"receptor_type":1}  # 10.0
 pf_pc_conn = connect_neuron(conn_pf_pc, neuron_models['granule'], neuron_models['purkinje'], syn_param)
-# print("pf_pc: ", rank, len(pf_pc_conn))
+
 
 
 if MULTI_CORE:
@@ -570,7 +564,7 @@ else:
 conn_pf_sc = np.array(f['connections/pf_sc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['pf_sc'], "delay": conn_delays['pf_sc'],"receptor_type":1}
 pf_sc_conn = connect_neuron(conn_pf_sc, neuron_models['granule'], neuron_models['stellate'], syn_param)
-# print("pf_sc: ", rank, len(pf_sc_conn))
+
 
 
 if MULTI_CORE:
@@ -582,7 +576,7 @@ else:
 conn_sc_pc = np.array(f['connections/sc_pc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['sc_pc'], "delay": conn_delays['sc_pc'],"receptor_type":2}  # -5.0
 sc_pc_conn = connect_neuron(conn_sc_pc, neuron_models['stellate'], neuron_models['purkinje'], syn_param)
-# print("sc_pc: ", rank, len(sc_pc_conn))
+
 
 
 if MULTI_CORE:
@@ -594,14 +588,8 @@ else:
 conn_glom_dcn = np.array(f['connections/glom_dcn'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['glom_dcn'], "delay": conn_delays['glom_dcn'],"receptor_type":1}
 glom_dcn_conn = connect_neuron(conn_glom_dcn, neuron_models['glomerulus'], neuron_models['dcn'], syn_param)
-# print("glom_dcn: ", rank, len(glom_dcn_conn))
 
-'''
-# Put 3/4 of connections to 0
-nc = int(len(glom_dcn_conn))
-sel = random.sample(range(1,nc),int(round(3*nc/4)))
-nest.SetStatus(itemgetter(*sel)(glom_dcn_conn), {"weight": 0.0})
-'''
+
 ############################ OLIVARY CONNECTIVITY #############################################
 
 if MULTI_CORE:
@@ -613,7 +601,7 @@ else:
 conn_io_pc = np.array(f['connections/io_pc'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['io_pc'], "delay": conn_delays['io_pc'],"receptor_type":3}
 io_pc_conn = connect_neuron(conn_io_pc, neuron_models['io'], neuron_models['purkinje'], syn_param)
-# print("io_pc: ", rank, len(io_pc_conn))
+
 
 
 if MULTI_CORE:
@@ -625,7 +613,7 @@ else:
 conn_io_dcn = np.array(f['connections/io_dcn'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['io_dcn'], "delay": conn_delays['io_dcn'],"receptor_type":1}
 io_dcn_conn = connect_neuron(conn_io_dcn, neuron_models['io'], neuron_models['dcn'], syn_param)
-# print("io_dcn: ", rank, len(io_dcn_conn))
+
 
 
 if MULTI_CORE:
@@ -637,7 +625,7 @@ else:
 conn_io_dcnp = np.array(f['connections/io_dcnp'])
 syn_param = {"model": "static_synapse", "weight": conn_weights['io_dcnp'], "delay": conn_delays['io_dcnp'],"receptor_type":1}
 io_dcnp_conn = connect_neuron(conn_io_dcnp, neuron_models['io'], neuron_models['dcnp'], syn_param)
-# print("io_dcnp: ", rank, len(io_dcnp_conn))
+
 
 
 if MULTI_CORE:
@@ -649,7 +637,7 @@ else:
 conn_dcnp_io = np.array(f['connections/dcnp_io'])
 syn_param = {"model": "static_synapse", "weight":conn_weights['dcnp_io'], "delay": conn_delays['dcnp_io'],"receptor_type":2}
 dcnp_io_conn = connect_neuron(conn_dcnp_io, neuron_models['dcnp'], neuron_models['io'], syn_param)
-# print("dcnp_io: ", rank, len(dcnp_io_conn))
+
 
 
 if MULTI_CORE:
@@ -683,7 +671,7 @@ print(end_netw-start_netw)
 TOT_DURATION = 1760.  # mseconds
 CS_START = 1000.  # beginning of stimulation 200.0 #
 CS_END = 1260.  # end of stimulation 460.0 #
-CS_FREQ = 36.  # Frequency in Hz (considering the background at 4 Hz (sum of Poisson processes = Poisson proc with the sum of rates)
+CS_FREQ = 36.  # Frequency in Hz - considering the background at 4 Hz (sum of Poisson processes = Poisson proc with the sum of rates)
 US_START = 1250.  # beginning of stimulation 450.#
 US_END = 1260.  # end of stimulation 460.#
 US_FREQ = 500.  # Frequency in Hz
@@ -692,11 +680,10 @@ io_num = len(neuron_models['io'])
 
 
 CS = nest.Create('poisson_generator',params={'rate':CS_FREQ, 'start': CS_START, 'stop': CS_END})
-#US = nest.Create('poisson_generator',params={'rate':US_FREQ, 'start': US_START, 'stop': US_END})
+
 
 # Localized CS
-#spike_nums = np.int(np.round((CS_FREQ * (CS_END - CS_START)) / 1000.))
-#stim_array = np.round(np.linspace(CS_START, CS_END, spike_nums))
+
 RADIUS = 150
 gloms_pos = positions[positions[:,1]==cell_type_ID['glomerulus'], :]
 x_c, z_c = 200., 200.
@@ -707,8 +694,7 @@ target_gloms = gloms_pos[target_gloms_idx,0]+1
 id_stim = [glom for glom in neuron_models['glomerulus'] if glom in target_gloms]
 id_stim = sorted(list(set(id_stim)))
 n = len(id_stim)
-#CS = nest.Create("spike_generator", n,
-					#   params = {'spike_times': stim_array})
+
 nest.Connect(CS, id_stim)
 
 # US not as Poisson to avoid that some IO do not fire:
@@ -776,46 +762,33 @@ RECORD_VM = False
 if RECORD_VM:
 	grc_vm = nest.Create('multimeter')
 	goc_vm = nest.Create('multimeter')
-	#pc_vm = nest.Create('multimeter')
-	#bc_vm = nest.Create('multimeter')
-	#sc_vm = nest.Create('multimeter')
-	#dcn_vm = nest.Create('multimeter')
-	#dcnp_vm = nest.Create('multimeter')
-	#io_vm = nest.Create('multimeter')
+	pc_vm = nest.Create('multimeter')
+	bc_vm = nest.Create('multimeter')
+	sc_vm = nest.Create('multimeter')
+	dcn_vm = nest.Create('multimeter')
+	dcnp_vm = nest.Create('multimeter')
+	io_vm = nest.Create('multimeter')
 
 	nest.SetStatus(grc_vm, {'withtime': True, 'record_from': ['V_m','I_stc1','I_stc2','G1','G2'], 'to_file': True, 'label': 'granule_vm'})
 	nest.SetStatus(goc_vm, {'withtime': True, 'record_from': ['V_m','I_stc1','I_stc2','G1','G2','G3'], 'to_file': True, 'label': 'golgi_vm'})
-	#nest.SetStatus(pc_vm, {'withtime': True, 'record_from': ['V_m'], 'to_file': True, 'label': 'purkinje_vm'})
-	#nest.SetStatus(bc_vm, {'withtime': True, 'record_from': ['V_m'], 'to_file': True, 'label': 'basket_vm'})
-	#nest.SetStatus(sc_vm, {'withtime': True, 'record_from': ['V_m'], 'to_file': True, 'label': 'stellate_vm'})
-	#nest.SetStatus(dcn_vm, {'withtime': True, 'record_from': ['V_m','I_stc1','I_stc2'], 'to_file': True, 'label': 'dcn_vm'})
-	#nest.SetStatus(dcnp_vm, {'withtime': True, 'record_from': ['V_m','I_stc1','I_stc2'], 'to_file': True, 'label': 'dcnp_vm'})
-	#nest.SetStatus(io_vm, {'withtime': True, 'record_from': ['V_m'], 'to_file': True, 'label': 'io_vm'})
+	nest.SetStatus(pc_vm, {'withtime': True, 'record_from': ['V_m'], 'to_file': True, 'label': 'purkinje_vm'})
+	nest.SetStatus(bc_vm, {'withtime': True, 'record_from': ['V_m'], 'to_file': True, 'label': 'basket_vm'})
+	nest.SetStatus(sc_vm, {'withtime': True, 'record_from': ['V_m'], 'to_file': True, 'label': 'stellate_vm'})
+	nest.SetStatus(dcn_vm, {'withtime': True, 'record_from': ['V_m','I_stc1','I_stc2'], 'to_file': True, 'label': 'dcn_vm'})
+	nest.SetStatus(dcnp_vm, {'withtime': True, 'record_from': ['V_m','I_stc1','I_stc2'], 'to_file': True, 'label': 'dcnp_vm'})
+	nest.SetStatus(io_vm, {'withtime': True, 'record_from': ['V_m'], 'to_file': True, 'label': 'io_vm'})
 
 	nest.Connect(grc_vm, campione)
 	nest.Connect(goc_vm, neuron_models['golgi'])
-	#nest.Connect(pc_vm, neuron_models['purkinje'])
-	#nest.Connect(bc_vm, neuron_models['basket'])
-	#nest.Connect(sc_vm, neuron_models['stellate'])
-	#nest.Connect(dcn_vm, neuron_models['dcn'])
-	#nest.Connect(dcnp_vm, neuron_models['dcnp'])
-	#nest.Connect(io_vm, neuron_models['io'])
+	nest.Connect(pc_vm, neuron_models['purkinje'])
+	nest.Connect(bc_vm, neuron_models['basket'])
+	nest.Connect(sc_vm, neuron_models['stellate'])
+	nest.Connect(dcn_vm, neuron_models['dcn'])
+	nest.Connect(dcnp_vm, neuron_models['dcnp'])
+	nest.Connect(io_vm, neuron_models['io'])
 
 print('Simulation start')
 nest.Simulate(TOT_DURATION)
-#nest.Simulate(500.0)
 print('Simulation finished')
 
-'''
-nest.raster_plot.from_device(dcn_spikes, hist=True, hist_binwidth=5.)
-plt.title('DCNnL spikes')
-plt.show()
 
-nest.raster_plot.from_device(pc_spikes, hist=True, hist_binwidth=5.)
-plt.title('PC spikes')
-plt.show()
-
-nest.raster_plot.from_device(io_spikes, hist=True, hist_binwidth=5.)
-plt.title('IO spikes')
-plt.show()
-'''
