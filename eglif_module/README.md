@@ -6,7 +6,7 @@ To use the latest version of custom NEST models for cerebellar simulations, refe
 The version in the current folder is compatible with NEST 2.14 and is now deprecated.
 
 TO COMPILE and INSTALL the module
-
+```
 $ cd <path_eglif_module>
 
 $ cd ..
@@ -21,10 +21,12 @@ $ make
 
 $ make install
 
-
+```
 
 TO USE the module in PyNEST:
 
+```
 import nest
 
 nest.Install("eglif_module")
+```
