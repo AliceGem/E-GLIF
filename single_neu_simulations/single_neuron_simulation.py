@@ -35,7 +35,6 @@ and records its membrane potential.
 # including connections between nodes, status of neurons, devices and
 # intrinsic time clocks, is kept and influences the next simulations.
 
-import auxiliary_functions as aux
 import nest
 import nest.voltage_trace
 import pylab as pl
@@ -43,7 +42,7 @@ import numpy as np
 from matplotlib.pylab import *
 import random
 
-nest.Install("models")
+nest.Install("cerebmodule")
 nest.set_verbosity("M_WARNING")
 nest.ResetKernel()
 nest.SetKernelStatus({"overwrite_files": True,				# Parameters for writing on files
@@ -65,9 +64,9 @@ nest.SetKernelStatus({'grng_seed' : random.randint(10,10000)})
 
 
 # Neurons
-single_neuron_MLI = nest.Create("eglif_cond_alpha_multisyn")		# Create E-GLIF neuron (then the parameters will define the neuron type)	
- 
-print(nest.GetDefaults("eglif_cond_alpha_multisyn"))	
+single_neuron_MLI = nest.Create("eglif_cond_alpha_multisyn")		# Create E-GLIF neuron (then the parameters will define the neuron type)
+
+print(nest.GetDefaults("eglif_cond_alpha_multisyn"))
 print("eglif_cond_alpha_multisyn: {0}".format( 					# Print the recordable variables in the E-GLIF model
        nest.GetDefaults("eglif_cond_alpha_multisyn")["recordables"]))
 
@@ -78,26 +77,26 @@ num_step = 10    	# Number of current step in each square wave period - literatu
 num_tot = num_freq*num_step
 
 current_dc_MLI = []
-       
+
 
 for i in range(num_dc):
      current_dc_MLI.append(1)
-        
- 
+
+
 for i in range(0,num_dc):
     current_dc_MLI[i] = nest.Create("dc_generator")	# Provide a positive input current (DC)
-      
+
 
 # Square wave input
 current_sw_MLI = []
-      
+
 
 for i in range(num_tot):
      current_sw_MLI.append(1)
-        
+
 for i in range(0,num_tot):
     current_sw_MLI[i] = nest.Create("dc_generator")	# Provide a positive input current (DC)
-  
+
 
 
 # Measurement devices
@@ -109,11 +108,11 @@ sd = nest.Create('spike_detector',
 
 m = nest.Create("multimeter",
 		        params = {"interval": 1.0,
-		                 "record_from": ["V_m", "V_th", "I_stc1", "I_stc2", "sum_buffer","I_gen"],
+		                 "record_from": ["V_m", "I_adap", "I_dep"],
 		                  "withgid": True,
 		                  "to_file": True,
 		                  "label": "multimeter"})
-	 
+
 	# Third, the neuron and the voltmeter are configured using
 	# `SetStatus()`, which expects a list of node handles and a list of
 	# parameter dictionaries.
@@ -123,14 +122,14 @@ m = nest.Create("multimeter",
 	# True.
 
 
-# Experiments linear adaptive neuron model:			
+# Experiments linear adaptive neuron model:
 
 Cm_MLI = 14.6;
-     
-ratio_current_Cm_MLI = [0.0,0.82,0.0,1.64,0.0,2.47,0.0,-1.64,0.0]	
-  
+
+ratio_current_Cm_MLI = [0.0,0.82,0.0,1.64,0.0,2.47,0.0,-1.64,0.0]
+
 amp_res = 2.47*Cm_MLI		# [pA] amplitude sw current steps
-        
+
 
 dur_res = 0.03     # [s]
 
@@ -141,7 +140,7 @@ print(sw_period)
 
 
 # Durate intervalli dell'intero protocollo
-durate = [10, 1, 1, 1, 1, 1, 1, 1, 1]		
+durate = [10, 1, 1, 1, 1, 1, 1, 1, 1]
 
 
 print(np.sum(durate)*1000)
@@ -156,78 +155,71 @@ cont = 1
 for i in durate[:num_dc]:
     print(durate[:cont])
     nest.SetStatus(current_dc_MLI[cont-1],{'amplitude' :ratio_current_Cm_MLI[cont-1]*Cm_MLI,'start' : (np.sum(durate[:cont-1]))*1000.0, 'stop' : (np.sum(durate[:cont]))*1000.0})
-    cont += 1 
+    cont += 1
 
 csw = 0
-for i in range(0,num_freq):	
+for i in range(0,num_freq):
     for k in range(0,num_step):
         if i==0:
             starting = start_res + (k*dur_res+k*sw_period[i])
-	    ending = starting + dur_res
+            ending = starting + dur_res
             print(starting)
-	    print(ending)
+            print(ending)
         else:
             starting = start_res+(i)*(num_step*dur_res)+num_step*sum(sw_period[:i])+(k*dur_res+k*sw_period[i])           # [ms]
-	    ending = starting + dur_res
-	    print(starting)
-	    print(ending)
+            ending = starting + dur_res
+            print(starting)
+            print(ending)
         nest.SetStatus(current_sw_MLI[csw],{'amplitude' :amp_res,'start' : starting*1000, 'stop' : ending*1000})
-	csw += 1
-       
-        
-        
+    csw += 1
+
+
+
 print(csw)
 
 
-#Da ottimizzazioni MATLAB
-param_all = [2.0246, 1.0959, 5.8634, 1.8868, 5.9532, 3.7113]				
+#From MATLAB optimization
+param_all = [2.0246, 1.0959, 5.8634, 1.8868, 5.9532, 3.7113]
 
-#MLI neuron: instrinsic tonic activity; 
-nest.SetStatus(single_neuron_MLI, {'bT_size':185,
-			           't_ref' : 1.59,
-		          	   'C_m' : Cm_MLI,				
-				   'tau_m' : 9.125,
-				   'E_L' : -68.0,			
-				   'Ie_const': param_all[5],
-				   'Ie_sinA' : 0.0*Cm_MLI,
-				   'Ie_sinF': 0.0,	
-				   'adaptC' : param_all[0],
-				   'Vinit':-68.0,
-				   'V_reset' : -78.0,		
-				   'Vth_init' : -53.0,
-				   'Vth_inf' : -53.0,
-				   'Vth_reset' : -53.0,
-				   'lambda_0' : 1.8,	
-				   'delta_V' : 1.1, 	
-			 	   'k1' : param_all[3],	
-				   'k2': param_all[1],
-				   'R1' : 0.0,				
-				   'R2init' : 1.0,	
-				   'A1' : param_all[4],
-			           'A2' : param_all[2],
+#MLI neuron: instrinsic tonic activity;
+nest.SetStatus(single_neuron_MLI, {'t_ref' : 1.59,
+		          	               'C_m' : Cm_MLI,
+				                   'tau_m' : 9.125,
+				                   'E_L' : -68.0,
+				                   'I_e': param_all[5],
+                                   'kadap' : param_all[0],
+				                   'Vinit':-68.0,
+				                   'V_reset' : -78.0,
+				                   'V_th' : -53.0,
+				                   'lambda_0' : 1.8,
+				                   'tau_V' : 1.1,
+			 	                   'k1' : param_all[3],
+				                   'k2': param_all[1],
+				                   'A1' : param_all[4],
+			                       'A2' : param_all[2],
 				   })
 
 
-	# Fourth, the neuron is connected to the devices. The command
-	# `Connect()` has different variants. Plain `Connect()` just takes the
-	# handles of pre- and post-synaptic nodes and uses the default values
-	# for weight and delay. Note that the connection direction for the voltmeter is
-	# reversed compared to the spike detector, because it observes the
-	# neuron instead of receiving events from it. Thus, `Connect()`
-	# reflects the direction of signal flow in the simulation kernel
-	# rather than the physical process of inserting an electrode into the
-	# neuron. The latter semantics is presently not available in NEST.
+# Fourth, the neuron is connected to the devices. The command
+# `Connect()` has different variants. Plain `Connect()` just takes the
+# handles of pre- and post-synaptic nodes and uses the default values
+# for weight and delay. Note that the connection direction for the voltmeter is
+# reversed compared to the spike detector, because it observes the
+# neuron instead of receiving events from it. Thus, `Connect()`
+# reflects the direction of signal flow in the simulation kernel
+# rather than the physical process of inserting an electrode into the
+# neuron. The latter semantics is presently not available in NEST.
 
 for i in range(0,num_dc):
     nest.Connect(current_dc_MLI[i], single_neuron_MLI)
-	    
 
-nest.Connect(m, single_neuron_MLI)		
+
+nest.Connect(m, single_neuron_MLI)
 nest.Connect(single_neuron_MLI, sd)
-   
+
 for i in range(0,num_tot):
    nest.Connect(current_sw_MLI[i], single_neuron_MLI)
- 
+
 
 print(starting-start_res)
 
@@ -235,5 +227,3 @@ print(starting-start_res)
 # desired simulation time in milliseconds.
 
 nest.Simulate(18000.0)
-
-
