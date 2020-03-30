@@ -108,7 +108,7 @@ sd = nest.Create('spike_detector',
 
 m = nest.Create("multimeter",
 		        params = {"interval": 1.0,
-		                 "record_from": ["V_m", "I_adap", "I_dep"],
+		                 "record_from": ["V_m", "V_th", "I_dep", "I_adap", "I_gen"],
 		                  "withgid": True,
 		                  "to_file": True,
 		                  "label": "multimeter"})
