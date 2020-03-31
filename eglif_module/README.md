@@ -3,15 +3,16 @@ The module "eglif_module" contains neuron and synapse models that are required t
 
 To use the latest version of custom NEST models for cerebellar simulations, refer to https://github.com/dbbs-lab/cereb-nest, compatible with NEST 2.18.0
 
-The version in the current folder is compatible with NEST 2.14 and is now deprecated.
+Attention!! The version in the current folder is compatible with NEST 2.14 and is now deprecated!
 
-TO COMPILE and INSTALL the module
+TO COMPILE and INSTALL the module:
+
 ```
 $ cd <path_eglif_module>
 
 $ cd ..
 
-$ mkdir ceglif_module_build
+$ mkdir eglif_module_build
 
 $ cd eglif_module_build
 
