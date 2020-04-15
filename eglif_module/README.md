@@ -1,33 +1,45 @@
-The module "eglif_module" contains neuron and synapse models that are required to simulate cerebellar single neuron and Spiking Neural Networks with advanced point neuron dynamics:
-- eglif neuron model (eglif_cond_alpha_multisyn)
+# E-GLIF module
 
-To use the latest version of custom NEST models for cerebellar simulations, refer to https://github.com/dbbs-lab/cereb-nest, compatible with NEST 2.18.0
+Source C++ NEST code for the E-GLIF module installation and usage in PyNEST (compatible with NEST 2.18.0)
 
-Attention!! The version in the current folder is compatible with NEST 2.14 and is now deprecated!
-
-TO COMPILE and INSTALL the module:
-
+To install the module (https://nest.github.io/nest-simulator/extension_modules):
+* install NEST 2.18.0 following the instructions at https://nest-simulator.readthedocs.io/en/latest/installation/
+* export an environment variable containing the installation directory of NEST. E.g.:
 ```
-$ cd <path_eglif_module>
-
-$ cd ..
-
-$ mkdir eglif_module_build
-
-$ cd eglif_module_build
-
-$ cmake -Dwith-nest=<nest_install_dir>/bin/nest-config ../eglif_module
-		
-$ make
-
-$ make install
-
+export NEST_INSTALL_DIR=$HOME/nest-simulator-install
+```
+* download the E-GLIF module source code files and save them in the folder `eglif_module`
+* create a new folder to build the module and make it the current directory:
+```
+mkdir $HOME/eglif_module-build
+cd $HOME/eglif_module-build
 ```
 
-TO USE the module in PyNEST:
+* run cmake (tested with CMake 3.10.2):
+```
+cmake -Dwith-nest=${NEST_INSTALL_DIR}/bin/nest-config $HOME/eglif_module
+```
 
+* make and install the module
+```
+make
+make install
+```
+
+
+* set environment variable:
+```
+export LD_LIBRARY_PATH=${NEST_INSTALL_DIR}/share/nest/sli:$LD_LIBRARY_PATH
+
+```
+
+* Every time you need the module, you can install it in this way (inside your python script):
 ```
 import nest
+nest.Install("eglifmodule")
+```
 
-nest.Install("eglif_module")
+* You can now use the E-GLIF neuron model inside your PyNEST script, e.g.:
+```
+nest.Create("eglif_cond_alpha_multisyn")
 ```

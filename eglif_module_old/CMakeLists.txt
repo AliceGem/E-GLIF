@@ -1,4 +1,4 @@
-# Eglif/CMakeLists.txt
+
 #
 # This file is part of NEST.
 #
@@ -20,8 +20,9 @@
 cmake_minimum_required( VERSION 2.8.12 )
 
 # This CMakeLists.txt is configured to build your external module for NEST. For
-# illustrative reasons this module is called 'my' (change SHORT_NAME to your
-# preferred module name). NEST requires you to extend the 'SLIModule' and provide a module header
+# illustrative reasons this module is called 'eglif_' (change SHORT_NAME to your
+# preferred module name). NEST requires you to extend the 'SLIModule' (see
+# eglif_module.h and eglif_module.cpp as an example) and provide a module header
 # (see MODULE_HEADER). The subsequent instructions
 #
 # The configuration requires a compiled and installed NEST; if `nest-config` is
@@ -30,16 +31,18 @@ cmake_minimum_required( VERSION 2.8.12 )
 # For more informations on how to extend and use your module see:
 #           https://nest.github.io/nest-simulator/extension_modules
 
-# 1) Name your module here, i.e. add later with -Dexternal-modules=my:
-set( SHORT_NAME eglif )
+# 1) Name your module here, i.e. add later with -Dexternal-modules=eglif_:
+set( SHORT_NAME eglif_ )
 
 #    the complete module name is here:
 set( MODULE_NAME ${SHORT_NAME}module )
 
 # 2) Add all your sources here
 set( MODULE_SOURCES
-    eglifmodule.h eglifmodule.cpp
-    eglif_cond_alpha_multisyn.h eglif_cond_alpha_multisyn.cpp
+    eglif_module.h eglif_module.cpp
+    eglif_cond_alpha_multisyn.cpp eglif_cond_alpha_multisyn.h
+    eglif_cond_alpha_multisyn_vmin.cpp eglif_cond_alpha_multisyn_vmin.h
+    eglif_cond_alpha_multisyn_rng.cpp eglif_cond_alpha_multisyn_rng.h
     )
 
 # 3) We require a header name like this:
@@ -92,6 +95,22 @@ endif ()
 set( CMAKE_CXX_COMPILER "${NEST_COMPILER}" )
 
 project( ${MODULE_NAME} CXX )
+
+# Get the Python executable (for help generation).
+execute_process(
+    COMMAND ${NEST_CONFIG} --python-executable
+    RESULT_VARIABLE RES_VAR
+    OUTPUT_VARIABLE PYTHON_EXECUTABLE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the Python executable (for help generation).
+execute_process(
+    COMMAND ${NEST_CONFIG} --python-version
+    RESULT_VARIABLE RES_VAR
+    OUTPUT_VARIABLE PYTHON_VERSION_STRING
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
 # Get the install prefix.
 execute_process(
@@ -264,31 +283,40 @@ install( TARGETS ${MODULE_NAME}_lib DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 install( FILES ${MODULE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${MODULE_NAME} )
 install( DIRECTORY sli DESTINATION ${CMAKE_INSTALL_DATADIR} )
 
-# Install help.
-if ( NOT CMAKE_CROSSCOMPILING )
-  add_custom_target( generate_help ALL )
-  # Extract help from all source files in the source code, put them in
-  # doc/help and generate a local help index in the build directory containing
-  # links to the help files.
-  add_custom_command( TARGET generate_help POST_BUILD
-    COMMAND python -B generate_help.py "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}"
-    COMMAND python -B generate_helpindex.py "${PROJECT_BINARY_DIR}/doc"
-    WORKING_DIRECTORY "${NEST_INSTALL_PREFIX}/${NEST_INSTALL_DATADIR}/help_generator"
-    COMMENT "Extracting help information; this may take a litte while."
-    )
-  # Copy the local doc/help directory to the global installation
-  # directory for documentation.
-  install( DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/doc/help"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}"
-    )
-  # Update the global help index to contain all help files that are
-  # located in the global installation directory for documentation.
-  install( CODE
-    "execute_process(
-      COMMAND python -B generate_helpindex.py \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}\"
-      WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/${NEST_INSTALL_DATADIR}/help_generator\"
-    )"
-    )
+# Install help --- based on doc/CMakeLists.txt
+# Install only if Py >= 2.7.8 and NEST was installed with help
+if ( ( NOT CMAKE_CROSSCOMPILING ) 
+     AND PYTHON_EXECUTABLE 
+     AND ( ${PYTHON_VERSION_STRING} VERSION_GREATER "2.7.7" )
+     AND ( IS_DIRECTORY ${NEST_INSTALL_PREFIX}/${NEST_INSTALL_DOCDIR}/help )
+   )
+
+    # Extract help from all source files in the source code, put
+    # them in doc/help and generate a local help index in the
+    # build directory containing links to the help files.
+    install( CODE
+      "execute_process(
+         COMMAND ${PYTHON_EXECUTABLE} -B generate_help.py \"${PROJECT_SOURCE_DIR}\" \"${PROJECT_BINARY_DIR}\"
+         WORKING_DIRECTORY \"${NEST_INSTALL_PREFIX}/${NEST_INSTALL_DATADIR}/help_generator\"
+         )"
+      )
+  
+    # Copy the local doc/help directory to the global installation
+    # directory for documentation.
+    install( DIRECTORY "${PROJECT_BINARY_DIR}/doc/help"
+      DESTINATION "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}"
+      OPTIONAL
+      )
+  
+    # Update the global help index to include all help files in
+    # the global installation directory for documentation.
+    install( CODE
+      "execute_process(
+         COMMAND ${PYTHON_EXECUTABLE} -B generate_helpindex.py \"${NEST_INSTALL_PREFIX}/${NEST_INSTALL_DOCDIR}\"
+         WORKING_DIRECTORY \"${NEST_INSTALL_PREFIX}/${NEST_INSTALL_DATADIR}/help_generator\"
+         )"
+      )
+
 endif ()
 
 
