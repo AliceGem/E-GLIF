@@ -1,6 +1,6 @@
 # E-GLIF module
 
-Source C++ NEST code for the E-GLIF module installation and usage in PyNEST (compatible with NEST 2.18.0)
+Source C++ NEST code for the E-GLIF module installation and usage in PyNEST (compatible with NEST 2.18.0) - cfr. with the cerebNEST module containing also other cerebellum-specific NEST models (https://github.com/dbbs-lab/cereb-nest)
 
 To install the module (https://nest.github.io/nest-simulator/extension_modules):
 * install NEST 2.18.0 following the instructions at https://nest-simulator.readthedocs.io/en/latest/installation/
