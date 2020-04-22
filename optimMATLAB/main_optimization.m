@@ -115,17 +115,15 @@ ode3(i) = diff(I2) == k_adap*Vm - k2*I2 - k_adap*E_L(i);
 
 I = Ie+Ist;
 
-% Eigenvalues
+% Eigenvalues (l1, l2, l3)
 l1 = -k1;
 D = (1/tau_m(i)+k2)^2-4*(k2/tau_m(i)+k_adap/Cm(i));   % Discriminante
 l2 = 0.5*(-(1/tau_m(i)+k2)+sqrt(D));
 l3 = 0.5*(-(1/tau_m(i)+k2)-sqrt(D));
 
-% Eigenvectors
+% Eigenvectors (x1, x2, x3)
 csi = (k2-k1)*tau_m(i)/((1-k1*tau_m(i))*(k2-k1)*Cm(i)+k_adap*tau_m(i));
 csi2 = k_adap*tau_m(i)/((1-k1*tau_m(i))*(k2-k1)*Cm(i)+k_adap*tau_m(i));
-
-
 
 x1 = [csi; csi2; 1];      % Associated to l1
 
@@ -140,15 +138,15 @@ Sp = [(tau_m(i)*k2*I + E_L(i)*(tau_m(i)*k_adap+Cm(i)*k2))/(tau_m(i)*k_adap + Cm(
       I*k_adap*tau_m(i)/(tau_m(i)*k_adap + Cm(i)*k2);...                                        % I2
       0];                                                                                       % I1
 
-%la soluzione seguente ipotizza che i parametri non siano tutti contemporaneamente
-% nulli e i vincoli tengono conto di: soluzione IMMAGINARIA e STABILE
-
-
+% The following solution supposes parameters not all zero at the same time
 
 % c1, c2, c3 are vectors containing the constants' values during the
-% different phases of optimization: latency, 1st spk, SS spk (tonic and exc1,2,3), lb, 1st burst ISI
+% the most significant phases in each step of the stimulation protocol considered for optimization:
+% latency, 1st spk time, steady-state (SS) spk time - during autorhythm and depolarazion phases,
+% latency (lb) and first spike time - during rebound bursting
+% time of the first spike at the end of depolarization (AHP) - considered only for neurons exhibiting it (e.g. cerebellar Golgi cells)
 
-% Phase 1: time to first spike (latency)
+% Phase 1: time to first spike (latency) - see also [Hertag et al., 2012]
 syms c1
 c1(1) = 0;
 c2(1) = ((E_L(i)-Sp(1))*L3+Sp(2))/(L3-L2);
@@ -157,10 +155,8 @@ c3(1) = ((Sp(1)-E_L(i))*L2-Sp(2))/(L3-L2);
 V1 = c1(1)*x1(1)*exp(l1*t)+c2(1)*x2(1)*exp(l2*t)+c3(1)*x3(1)*exp(l3*t)+Sp(1);
 I2_lat = c1(1)*x1(2)*exp(l1*t)+c2(1)*x2(2)*exp(l2*t)+c3(1)*x3(2)*exp(l3*t)+Sp(2);
 
-% Stessa soluzione di Hertag perch� le c.i. portano Idep ad essere nulla
-% fino al primo spike
-
 equ1 = V1 - Vth(i);
+
 
 % Phase 2: time of the second spike (onset)
 syms t1
@@ -177,6 +173,7 @@ V2 = ((c1(2))*(x1(1)))*exp(l1*t)+((c2(2))*(x2(1)))*exp(l2*t)+((c3(2))*(x3(1)))*e
 I2_1spk = c1(2)*x1(2)*exp(l1*t)+c2(2)*x2(2)*exp(l2*t)+c3(2)*x3(2)*exp(l3*t)+Sp(2);
 
 equ2 = V2-Vth(i);
+
 
 % Phase 3: steady-state spiking time
 syms tss
@@ -208,9 +205,9 @@ Ihyp_lb = c1(4)*x1(2)*exp(l1*t)+c2(4)*x2(2)*exp(l2*t)+c3(4)*x3(2)*exp(l3*t)+Sp(2
 
 equ4 = Vlb-Vth(i);
 
+
 % Phase 4: rebound burst
 syms tlb
-% tlb = 5;           % IPOTESI!!! Meglio metterlo nell'ottimizzazione
 dVlb = ((c1(4))*(x1(1))*(l1))*exp(l1*tlb)+((c2(4))*(x2(1))*(l2))*exp(l2*tlb)+((c3(4))*(x3(1))*(l3))*exp(l3*tlb);
 beta2 = dVlb-(Vr(i)-Vth(i))/tau_m(i)-A2/Cm(i)+A1/Cm(i); % Con A2 sottratto dal valore raggiunto al tempo dello spike
 
@@ -221,12 +218,11 @@ c3(5) = (beta2-A1*l1*csi-l2*Vr_)/(l3-l2);
 Vb = c1(5)*x1(1)*exp(l1*t)+c2(5)*x2(1)*exp(l2*t)+c3(5)*x3(1)*exp(l3*t)+Sp(1);
 equ5 = Vb-Vth(i);
 
-% Phase 5 AHP1
-% Vdep1_ss = subs(Sp(1),Ist,Istim(1,i));
-% Idep1_ss = subs(Sp(2),Ist,Istim(1,i));
-    %Vdep1_ss = subs(Sp(1),Ist,0);
-Vdep1_ss = E_L(i);              % Punto di partenza: un valore di potenziale tra Vr e Vth perch� il neurone sta sparando
-Idep1_ss = subs(Sp(2),Ist,Istim(1,i));              % TO BE CHECKED
+
+% Considered only for neurons having a pause after depolarization (e.g. cerebellar Golgi cells):
+% Phase 5: AHP1 (following Istim(1,i))
+Vdep1_ss = E_L(i);              % Starting point: a Vm value between Vr and Vth because the neuron is in spiking state
+Idep1_ss = subs(Sp(2),Ist,Istim(1,i));
 
 phi = -Vdep1_ss/tau_m(i)-Idep1_ss/Cm(i)+E_L(i)/tau_m(i)+Ie/Cm(i);
 c1(6) = 0;
@@ -237,10 +233,8 @@ Iahp1 = c1(6)*x1(2)*exp(l1*t)+c2(6)*x2(2)*exp(l2*t)+c3(6)*x3(2)*exp(l3*t)+Sp(2);
 
 equ6 = Vahp1-Vth(i);
 
-% Phase 6 AHP2
-% Vdep2_ss = subs(Sp(1),Ist,Istim(2,i));
-% Idep2_ss = subs(Sp(2),Ist,Istim(2,i));
-% Vdep2_ss = subs(Sp(1),Ist,0);
+
+% Phase 6: AHP2 (following Istim(2,i))
 Vdep2_ss = E_L(i);
 Idep2_ss = subs(Sp(2),Ist,Istim(2,i));
 
@@ -253,10 +247,8 @@ Iahp2 = c1(7)*x1(2)*exp(l1*t)+c2(7)*x2(2)*exp(l2*t)+c3(7)*x3(2)*exp(l3*t)+Sp(2);
 
 equ7 = Vahp2-Vth(i);
 
+
 % Phase 7 AHP3
-% Vdep3_ss = subs(Sp(1),Ist,Istim(3,i));
-% Idep3_ss = subs(Sp(2),Ist,Istim(3,i));
-% Vdep3_ss = subs(Sp(1),Ist,0);
 Vdep3_ss = E_L(i);
 Idep3_ss = subs(Sp(2),Ist,Istim(3,i));
 
@@ -268,7 +260,9 @@ Vahp3 = c1(8)*x1(1)*exp(l1*t)+c2(8)*x2(1)*exp(l2*t)+c3(8)*x3(1)*exp(l3*t)+Sp(1);
 Iahp3 = c1(8)*x1(2)*exp(l1*t)+c2(8)*x2(2)*exp(l2*t)+c3(8)*x3(2)*exp(l3*t)+Sp(2);
 
 equ8 = Vahp3-Vth(i);
-%% Plot delle 3 soluzioni per check
+
+
+%% Plot of solutions to check - to be VERIFIED!
 % close all
 % param_all = [0.01, 0.03, 0.35*Cm(i), 0.05, 1.5*Cm(i)];
 % T_tonic(i,1)=8;
