@@ -3,6 +3,7 @@
 % mechanisms and Spike-Frequency Adaptation (SFA) + spike-triggered current modelling
 % Na channel-related fast mechanisms; therefore, a simple linear model (useful for
 % large scale simulations) and biologically plausible.
+% References: [Geminiani et al., Front Neuroinform, 2018]; [Geminiani et al.,  Front Comput Neurosci, 2019]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Note: the parameter k2 should be set to -1/tau_m, for neurons with self-sustained
