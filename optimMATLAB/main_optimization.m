@@ -403,11 +403,13 @@ ezplot(subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(3,i),param_all(1),par
 
 
 %% Optimization
-% Att! Quello che otteniamo è il meglio per quei constraints!
+% Optimization uses a multi-objective strategy, minimizing an error that takes into account multiple features at
+% the same time. So the found solution is a compromise between all the features, while also aiming at fulfilling the constraints
 delta = (-1/tau_m(i)-k2)^2-4*(-k2/tau_m(i)+k_adap/Cm(i));     % [1/ms^2]
 param3_low = 3/((1/(m_IF(i)+3*sd_IF(i)))*1000);
 param3_high = 3/t_ref(i);
 
+% Global variables for saving optimization info
 global par cf w con error_all
 w = 1;          % The weight to consider whether Vm reaches the threshold or not
 
@@ -415,15 +417,17 @@ low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.000001,0.0001,3/((1/m_IF(i))*10
 up_2 = 10*low(2);
 up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,10.0,3/t_ref(i),10.0,10.0];
 
+% Linear inequality constraints: A2<A1; kadap>(Cm/tau_m)*k2 -> in normalized
+% ranges!!
+% Att: the first constraints should be modified if A1 and A2 are not in the same ranges
 A = [0 0 1 0 -1 0;(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
-        % Linear constraints: A2<A1; kadap>(Cm/tau_m)*k2 -> in normalized
-        % ranges!! Att: il primo vincolo va modificato se A1 e A2 non hanno
-        % gli stessi ranges!
 b = [0;low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
 
+% Linear equality constraints
 Aeq = [];
 beq = [];
 
+% Lower and upper bounds of normalized parameters
 lb = zeros(6,1);
 ub = ones(6,1);
 
@@ -434,7 +438,7 @@ for nopt = 1:10
     error_all = [];
 
     start_param = rand(6,1)'
-    %Check that the constraints are satisfied at initial point
+    % Check that the constraints are satisfied at initial point
     con1 = (confun_eglif(start_param,low,up,i,Iinh,Cm,tau_m,E_L,Vth, Vinh_ss,t_ref,L2, L3, Sp, T_tonic, Istim,V1,V2,Vss, T_dep3, SFA_gain, Iahp1, Iahp2, Iahp3))
     while con1(1)>0 || con1(2)>0 || con1(3)>0  || con1(4)>0
         start_param = rand(6,1)'
@@ -443,6 +447,7 @@ for nopt = 1:10
 
     equs = [equ1;equ2;equ3;equ4;equ5;equ6;equ7;equ8];
 
+% Optimization algorithm options
     options = optimoptions(@fmincon,'Algorithm','sqp','Display','iter-detailed','TolX',1e-3,'TolCon',1e-3,...
         'TolFun',1e-3,'ObjectiveLimit',0.1,'MaxFunEvals',200,'MaxIter',200);         %,'ScaleProblem','obj-and-constr');          % Test also different algorithms!!!!
 
@@ -460,10 +465,12 @@ for nopt = 1:10
     nopt
 end
 
+% Saving optimization data
 save param.mat parametri
 save cost.mat cost_function
 save init_par.mat par_init
 save constr.mat constraints
 save err_all.mat err_all
+
 %%
 clear parametri cost_function par_init constraints
