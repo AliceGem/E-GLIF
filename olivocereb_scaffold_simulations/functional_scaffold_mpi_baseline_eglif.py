@@ -47,12 +47,10 @@ using_mpi4py = True
 if NEU_MOD=='eglif_cond_alpha_multisyn':
 	param_goc = {'t_ref': 2.0, 'C_m': 145.0,'tau_m': 44.0,'V_th': -55.0,'V_reset': -75.0,'Vinit': -62.0,'E_L': -62.0,'lambda':1.0, 'deltaV':0.4,'Ie': 16.214,'k_adap': 0.217,'k1': 0.031, 'k2': 0.023,'A1': 259.988,'A2':178.01}
 	param_grc = {'t_ref': 1.5, 'C_m': 7.0,'tau_m': 24.15,'V_th': -41.0,'V_reset': -70.0,'Vinit': -62.0,'E_L': -62.0,'lambda':1.0, 'deltaV':0.3,'Ie': -0.888,'k_adap': 0.022,'k1': 0.311, 'k2': 0.041,'A1': 0.01,'A2':-0.94}
-	#param_pc = {'t_ref': 0.5, 'C_m': 334.0,'tau_m': 47.0,'V_th': -43.0,'V_reset': -69.0,'Vinit': -59.0,'E_L': -59.0,'lambda':1.0, 'deltaV':0.95,'Ie': 742.54,'k_adap': 1.492,'k1': 0.1950, 'k2': 0.041,'A1': 157.622,'A2':172.622}
 	param_pc = {'t_ref': 0.5, 'C_m': 334.0,'tau_m': 47.0,'V_th': -43.0,'V_reset': -69.0,'Vinit': -59.0,'E_L': -59.0,'lambda':4.0, 'deltaV':3.5,'Ie': 742.54,'k_adap': 1.492,'k1': 0.1950, 'k2': 0.041,'A1': 157.622,'A2':172.622}
 	param_mli = {'t_ref': 1.59, 'C_m': 14.6,'tau_m': 9.125,'V_th': -53.0,'V_reset': -78.0,'Vinit': -68.0,'E_L': -68.0,'lambda':1.8, 'deltaV':1.1,'Ie': 3.711,'k_adap': 2.025,'k1': 1.887, 'k2': 1.096,'A1': 5.953,'A2':5.863}
-	#param_dcn = {'t_ref': 0.8, 'C_m': 142.0,'tau_m': 33.0,'V_th': -36.0,'V_reset': -55.0,'Vinit': -45.0,'E_L': -45.0,'lambda':0.9, 'deltaV':1.0,'Ie': 75.385,'k_adap': 0.408,'k1': 0.697, 'k2': 0.047,'A1': 13.857,'A2':3.477}
 	param_dcn = {'t_ref': 0.8, 'C_m': 142.0,'tau_m': 33.0,'V_th': -36.0,'V_reset': -55.0,'Vinit': -45.0,'E_L': -45.0,'lambda':3.5, 'deltaV':3.0,'Ie': 75.385,'k_adap': 0.408,'k1': 0.697, 'k2': 0.047,'A1': 13.857,'A2':3.477}
-	param_dcnp = {'t_ref': 0.8, 'C_m': 56.0,'tau_m': 56.0,'V_th': -39.0,'V_reset': -55.0,'Vinit': -40.0,'E_L': -40.0,'lambda':0.9, 'deltaV':1.0,'Ie': 26.593,'k_adap': 0.052,'k1': 0.512, 'k2': 0.0302,'A1': 83.767,'A2':83.767}
+	param_dcnp = {'t_ref': 0.8, 'C_m': 56.0,'tau_m': 56.0,'V_th': -39.0,'V_reset': -55.0,'Vinit': -40.0,'E_L': -40.0,'lambda':0.9, 'deltaV':1.0,'Ie': 2.384,'k_adap': 0.079,'k1': 0.041, 'k2': 0.044,'A1': 176.358,'A2':176.358}
 	param_io = {'t_ref': 1.0, 'C_m': 189.0,'tau_m': 11.0,'V_th': -35.0,'V_reset': -45.0,'Vinit': -45.0,'E_L': -45.0,'lambda':1.2, 'deltaV':0.8,'Ie': -18.101,'k_adap': 1.928,'k1': 0.191, 'k2': 0.091,'A1': 1810.93,'A2':1358.197}
 
 # Parameters to avoid threshold variation
