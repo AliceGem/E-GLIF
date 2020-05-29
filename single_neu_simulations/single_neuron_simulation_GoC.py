@@ -68,14 +68,14 @@ nest.SetKernelStatus({'grng_seed' : random.randint(10,10000)})
 # Neurons
 
 param_goc = {'t_ref': 2.0, 'C_m': 145.0, 'tau_m': 44.0, 'V_th': -55.0, 'V_reset': -75.0,'E_L': -62.0}
-eglif_cond_alpha_multisyn = {           # Ref: paper "Complex" e "Response"
+eglif_cond_alpha_multisyn = {           
             "t_ref": 2.0,
             "C_m": 145.0,
             "V_th": -55.0,
             "V_reset": -75.0,
             "E_L": -62.0,
             "Vinit": -62.0,
-            "lambda_0": 1.0,             # In network simulations: lambda_0 = 3.5, tau_V = 3.0 (Ref: paper "Response")
+            "lambda_0": 1.0,             
             "tau_V": 0.4,
             "tau_m": 44.0,
             "I_e": 16.21,
