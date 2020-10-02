@@ -1,57 +1,57 @@
 % E-GLIF neuron model optimization
-% LIF neuron + adaptive current for modelling subthreshold-related
-% mechanisms and SFA + spike-triggered currents modelling io
-% channel-related mechanisms; therefore, a simple linear model (useful for
+% LIF neuron with an adaptive current (Iadap) for modelling subthreshold-related
+% mechanisms and spike-frequency adaption + a spike-triggered current (Idep)
+% modelling channel-related mechanisms; therefore, a simple linear model (useful for
 % large scale simulations) and biologically plausible.
+% References: Geminiani et al., Front Neuroinform, 2018;
+%             Geminiani et al., Front Comput Neurosci, 2019.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%% k2 fissato a -1/tau_m; ottimizzati solo gli altri parametri %%%%%%%
+%%%%%%%%%%%%%%%%%%%%% PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% k2 should be set to -1/tau_m for neurons with self-sustained subthreshold oscillations;
 
- clear
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+clear
 % clc
 
-neu_names = { 'MLI', 'DCN', 'IO'};
 
-% Neuron properties from neurophysiology: checked values from papers (for
-% coherence on protocol) + neuroelectro.org
-Cm = [14.6 142.0 197.0];
-tau_m = [-9.125 -33.0 -20.0];   % [ms] should be the opposite of the given value - to fix
-t_ref = [1.59 1.5 12.0];
-E_L = [-68.0 -45.0 -55.0];    % [mV]
-Vth = [-53.0 -36.0 -50.0];    % [mV]
-Vr = [-78.0 -55.0 -65.0];    % EL-10;
+% Example for cerebellar Molecular Layer Interneurons
+
+% Neuron parameters from neurophysiology: values from papers or neuroelectro.org
+Cm = [14.6];
+tau_m = [-9.125];   % [ms] should be the opposite of the given value!
+t_ref = [1.59 1.5];
+E_L = [-68.0];    % [mV]
+Vth = [-53.0];    % [mV]
+Vr = [-78.0];    % EL-10;
 nn = length(Cm);
-fI_PC = 0.1;        % Masoli, 2015 - Fig.2
 
-m_IF = [8.5 20.0 0.0];        % Mean intrinsic frequency - Lachamp, 2009
-sd_IF = [2.7 0 3.0 0.0];     % SE o Standard deviation intrinsic frequency - Lachamp, 2009 (reports SE over n = 6)
-            
+% Stimulus-response protocol
 
-    
-% Protocolli di stimolazione dep: Istim = [3xnn] in [pA]; 3 fasi di stimolazione,
-% nn neuroni
-Istim = [[12.0; 24.0; 36.0]...     % MLI - Stellate example from Galliano et al., 2013 - Fig.S3
-        [0.0; 0.0; 0.0]]; % IO - tonic bursting - da capire il protocollo di stimolazione
-                                        
-m_Fdep = [[30.0; 60.0; 90.0]...              %[[30.0; 70.0; 90.0]...         % f-I slope da Galliano  
-          [45.0; 80.0; 115.0]...       % [Uusisaari et al., 2007]
-          [0.0; 0.0; 0.0]];
+% Autorhythm phase
+m_IF = [8.5];        % Mean intrinsic frequency [Lachamp et al., 2009]
+sd_IF = [2.7];      % Standard deviation of intrinsic frequency
 
-sd_Fdep = 1*[[1.0; 5.0; 10.0]...   % La sd non è disponibile nei dati dal model
-           [5.0; 7.0; 10.0]...
-           [0.0; 0.0; 0.0]];
- 
 
-% Stimolazione hyp     
-Iinh = [-24.0];       
-Vinh_min = [-125];      
-Vinh_ss = [-115];
+% Depolarizing phases: Istim = [3xnn] in [pA]; 3 stimulation steps, nn neurons (1 in this case)
+Istim = [[12.0; 24.0; 36.0]];     % MLI - Stellate example from [Galliano et al., 2013 - Fig.S3]
 
-SFA_gain = [1 1 1; ];
+% Output firing rate (initial)
+m_Fdep = [[30.0; 60.0; 90.0]];
+sd_Fdep = [[1.0; 5.0; 10.0]];
 
-i = 1;      % i-th neuron
+% Spike-Frequency Adaptation (defined through gain, i.e. how much the steady-state frequency is different from the initial one)
+SFA_gain = [1 1 1];       % not present in Molecular Layer Interneurons, so SFA_gain is 1 in all 3 depolarizing phases
+
+% Hyperpolarizing phase
+Iinh = [-24.0];     % [pA] - input current
+Vinh_min = [-125];  % [mV]  - minimum membrane potential during hyperpolarization
+Vinh_ss = [-115];   % [mV]  - steady-state membrane potential during hyperpolarization
+
+
+i = 1;      % i-th chosen neuron
 
 
 % Model - 3D linear ODE system
@@ -67,7 +67,7 @@ ode3(i) = diff(I2) == k_adap*Vm - k2*I2 - k_adap*E_L(i);
 
 
 %%
-I = Ie+Ist;  	% Ie resta da ottimizzare (param(6)) perch� le correnti sono attive anche nella fase tonic, in assenza di input esterno. 
+I = Ie+Ist;  	% Ie resta da ottimizzare (param(6)) perch� le correnti sono attive anche nella fase tonic, in assenza di input esterno.
 
 % Eigenvalues
 l1 = -k1;
@@ -111,13 +111,13 @@ end
 T_dep1(i,:) = (1./(sd_Fdep(1,i).*randn(1,ne) + m_Fdep(1,i)))*1000;
 T_dep2(i,:) = (1./(sd_Fdep(2,i).*randn(1,ne) + m_Fdep(2,i)))*1000;
 T_dep3(i,:) = (1./(sd_Fdep(3,i).*randn(1,ne) + m_Fdep(3,i)))*1000;
- 
+
 Tdep = {T_dep1,T_dep2,T_dep3};
 
 m_Fburst = [m_IF(i)];           % [Hz]     % No rebound burst
 sd_Fburst = [sd_IF(i)];        %[1];
 Tburst = (1./(sd_Fburst(i).*randn(1,ne) + m_Fburst(i)))*1000;
-Tlb = 5.*randn(1,ne) + 1000*(1/mean(m_IF(i)));  
+Tlb = 5.*randn(1,ne) + 1000*(1/mean(m_IF(i)));
 
 Tahp = [5.*randn(ne,1) + 80, 5.*randn(ne,1) + 100, 5.*randn(ne,1) + 120];  %[80 100 120];
 %la soluzione seguente ipotizza che i parametri non siano tutti contemporaneamente
@@ -125,7 +125,7 @@ Tahp = [5.*randn(ne,1) + 80, 5.*randn(ne,1) + 100, 5.*randn(ne,1) + 120];  %[80 
 
 
 % c1, c2, c3 are vectors containing the constants' values during the
-% different phases of optimization: latency, 1st spk, SS spk (tonic and exc1,2,3), lb, 1st burst ISI 
+% different phases of optimization: latency, 1st spk, SS spk (tonic and exc1,2,3), lb, 1st burst ISI
 
 % Phase 1: time to first spike (latency)
 syms c1
@@ -192,7 +192,7 @@ syms tlb
 % tlb = 5;           % IPOTESI!!! Meglio metterlo nell'ottimizzazione
 dVlb = ((c1(4))*(x1(1))*(l1))*exp(l1*tlb)+((c2(4))*(x2(1))*(l2))*exp(l2*tlb)+((c3(4))*(x3(1))*(l3))*exp(l3*tlb);
 beta2 = dVlb-(Vr(i)-Vth(i))/tau_m(i)-A2/Cm(i)+A1/Cm(i); % Con A2 sottratto dal valore raggiunto al tempo dello spike
-            
+
 c1(5) = A1;
 c2(5) = (l3*Vr_-beta2+A1*l1*csi)/(l3-l2);
 c3(5) = (beta2-A1*l1*csi-l2*Vr_)/(l3-l2);
@@ -387,10 +387,9 @@ ezplot(subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(3,i),param_all(1),par
 
 
 
-%%
-% Att! Quello che otteniamo è il meglio per quei constraints!
+% Optimization run (minimization of cost function and constraints)
 delta = (-1/tau_m(i)-k2)^2-4*(-k2/tau_m(i)+k_adap/Cm(i));     % [1/ms^2]
-param3_low = 3/((1/(m_IF(i)+3*sd_IF(i)))*1000);       
+param3_low = 3/((1/(m_IF(i)+3*sd_IF(i)))*1000);
 param3_high = 3/t_ref(i);
 
 global par cf w con error_all
@@ -400,7 +399,7 @@ low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.000001,0.0001,3/((1/m_IF(i))*10
 up_2 = 10*low(2);
 up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,10.0,3/t_ref(i),10.0,10.0];
 
-A = [0 0 1 0 -1 0;(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];       
+A = [0 0 1 0 -1 0;(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
         % Linear constraints: A2<A1; kadap>(Cm/tau_m)*k2 -> in normalized
         % ranges!! Att: il primo vincolo va modificato se A1 e A2 non hanno
         % gli stessi ranges!
@@ -417,7 +416,7 @@ for nopt = 1:10
     cf = [];
     con = [];
     error_all = [];
-    
+
     start_param = rand(6,1)'
     %Check that the constraints are satisfied at initial point
     con1 = (confun_eglif(start_param,low,up,i,Iinh,Cm,tau_m,E_L,Vth, Vinh_ss,t_ref,L2, L3, Sp, T_tonic, Istim,V1,V2,Vss, T_dep3, SFA_gain, Iahp1, Iahp2, Iahp3))
@@ -425,7 +424,7 @@ for nopt = 1:10
         start_param = rand(6,1)'
         con1 = (confun_eglif(start_param,low,up,i,Iinh,Cm,tau_m,E_L,Vth, Vinh_ss,t_ref,L2, L3, Sp, T_tonic, Istim,V1,V2,Vss, T_dep3, SFA_gain, Iahp1, Iahp2, Iahp3))
     end
-    
+
     equs = [equ1;equ2;equ3;equ4;equ5;equ6;equ7;equ8];
 
     options = optimoptions(@fmincon,'Algorithm','sqp','Display','iter-detailed','TolX',1e-3,'TolCon',1e-3,...
@@ -433,7 +432,7 @@ for nopt = 1:10
 
 
 % % Separating linear and non linear constraints - error on area Vm
-    [param_all,fval_all] = ... 
+    [param_all,fval_all] = ...
     fmincon(@(param)objfun_eglif(param,low,up,equs,[1.2 1/2 1/4 1/6 1.1 1 1.1 1.1 1 1 1 1 1],Istim,i,T_tonic, Tdep, Tburst, Tlb, t_ref, SFA_gain,tau_m, Cm,E_L,Vth,Vr,Sp,L2,L3,Iinh(i),Tahp,Vinh_ss),start_param,...
         A,b,Aeq,beq,lb,ub,@(param)confun_eglif(param,low,up,i,Iinh,Cm,tau_m,E_L,Vth, Vinh_ss,t_ref,L2, L3, Sp, T_tonic, Istim,V1,V2,Vss, T_dep3, SFA_gain, Iahp1, Iahp2, Iahp3),options);
 
@@ -452,4 +451,3 @@ save constr.mat constraints
 save err_all.mat err_all
 %%
 clear parametri cost_function par_init constraints
-
