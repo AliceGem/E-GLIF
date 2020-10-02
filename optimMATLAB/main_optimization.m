@@ -266,145 +266,6 @@ Iahp3 = c1(8)*x1(2)*exp(l1*t)+c2(8)*x2(2)*exp(l2*t)+c3(8)*x3(2)*exp(l3*t)+Sp(2);
 equ8 = Vahp3-Vth(i);
 
 
-%% Plot of solutions to check - to be VERIFIED!
-% close all
-% param_all = [0.01, 0.03, 0.35*Cm(i), 0.05, 1.5*Cm(i)];
-% T_tonic(i,1)=8;
-% Tonic
-Vm_tonic_lat = subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)})
-Vm_tonic_1spk = subs(V2,{Ist,k_adap,k2,A2,k1,A1,Ie,t1},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
-Vm_tonic_ss = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,Ie,tss},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
-I2_tonic_lat = subs(I2_lat,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-I2_tonic_1spk = subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,Ie,t1},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
-I2_tonic_ss = subs(I2_ss,{Ist,k_adap,k2,A2,k1,A1,Ie,tss},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
-
-
-figure
-Xax = [0 1000]
-hton = ezplot(Vm_tonic_lat,Xax);
-set(hton,'Color','r','LineStyle','-.')
-hold on
-line(Xax,[Vth(i) Vth(i)],'LineStyle','--');
-h1 = ezplot((Vm_tonic_1spk),Xax);
-set(h1,'Color','b','LineStyle','-.')
-hss = ezplot(Vm_tonic_ss,Xax);
-set(hss,'Color','m','LineStyle','-.')
-ylim([-80 120])
-title(['param = ', num2str(param_all)])
-%%
-figure
-Xax = [0 1000]
-hton = ezplot(I2_tonic_lat,Xax);
-set(hton,'Color','r','LineStyle','-.')
-hold on
-line(Xax,[Vth(i) Vth(i)],'LineStyle','--');
-h1 = ezplot((I2_tonic_1spk),Xax);
-set(h1,'Color','b','LineStyle','-.')
-hss = ezplot(I2_tonic_ss,Xax);
-set(hss,'Color','m','LineStyle','-.')
-ylim([-80 120])
-title(['Iadap - param = ', num2str(param_all)])
-%%
-V_1(1) = subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-V_1(2) = subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(2,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-V_1(3)= subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-V_1(4)= subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{-Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-
-% I2_dep_lat(1) = subs(I2_lat,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(1,i),param_all(1),-1/tau_m(i),param_all(2),param_all(3),param_all(4),param_all(5)});
-% I2_dep_1spk(1) = subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,Ie,t1},{Istim(1,i),param_all(1),-1/tau_m(i),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1)});
-% I2_dep_ss(1) = subs(I2_ss,{Ist,k_adap,k2,A2,k1,A1,Ie,tss},{Istim(1,i),param_all(1),-1/tau_m(i),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1)});
-
-figure;
-
-Xax = [0 1000]
-hlat = ezplot(V_1(1),Xax);
-set(hlat,'Color','r')
-hold on
-line(Xax,[Vth(i) Vth(i)],'LineStyle','--');
-h = ezplot(V_1(2),Xax);
-set(h,'Color','r','LineStyle','--')
-h = ezplot(V_1(3),Xax);
-set(h,'Color','r','LineStyle',':')
-h = ezplot(V_1(4),Xax);
-set(h,'Color','r','LineStyle','-.')
-ylim([-80 120])
-
-V_2(1) = subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep1(i,1),param_all(6)});
-V_2(2) = subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(2,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep2(i,1),param_all(6)});
-V_2(3)= subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep3(i,1),param_all(6)});
-V_2(4)= subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{-Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),125,param_all(6)});
-
-
-%figure;
-hon1 = ezplot(V_2(1),Xax);
-set(hon1,'Color','b')
-hold on
-h = ezplot(V_2(2),Xax);
-set(h,'Color','b','LineStyle','--')
-h = ezplot(V_2(3),Xax);
-set(h,'Color','b','LineStyle',':')
-h = ezplot(V_2(4),Xax);
-set(h,'Color','b','LineStyle','-.')
-
-
-V_3(1) = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep1(i,1)*1.1,param_all(6)});
-V_3(2) = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(2,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep2(i,1)*1.1,param_all(6)});
-V_3(3)= subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep3(i,1)*1.1,param_all(6)});
-V_3(4) = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{-Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep1(i,1)*1.1,param_all(6)});
-
-hss = ezplot(V_3(1),Xax);
-set(hss,'Color','m')
-hold on
-h = ezplot(V_3(2),Xax);
-set(h,'Color','m','LineStyle','--')
-h = ezplot(V_3(3),Xax);
-set(h,'Color','m','LineStyle',':')
-h = ezplot(V_3(4),Xax);
-set(h,'Color','m','LineStyle','-.')
-
-% legend([hlat,hon1,hss],{'lat','on','ss'},'Location', 'northeastoutside')
-
-V_4 = subs(Vlb,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-
-h_lb = ezplot(V_4,Xax);
-set(h_lb,'Color','g')
-hold on
-
-ylim([-80 120])
-
-V_5 = subs(Vb,{Ist,k_adap,k2,A2,k1,A1,tlb,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),Tlb(1),param_all(6)});
-h_b = ezplot(V_5,Xax);
-set(h_b,'Color','c')
-ylim([-120 120])
-
-V_6 = subs(Vahp1,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-h_ahp1 = ezplot(V_6,Xax);
-set(h_ahp1,'Color','k')
-ylim([-120 120])
-
-V_7 = subs(Vahp2,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-h_ahp2 = ezplot(V_7,Xax);
-set(h_ahp2,'Color','k')
-ylim([-120 120])
-
-V_8 = subs(Vahp3,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-h_ahp3 = ezplot(V_8,Xax);
-set(h_ahp3,'Color','k')
-ylim([-200 200])
-title(['param = ',num2str(param_all)])
-
-figure;
-ezplot(subs(Ihyp_lb,{Ist,k_adap,k2,A2,k1,A1},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5)}),Xax);
-
-ylim([-120 120])
-
-figure;
-ezplot(subs(I2_lat,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5)}),Xax);
-hold on
-ezplot(subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1),param_all(6)}),Xax);
-ezplot(subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1),param_all(6)}),Xax);
-
-
 
 %% Optimization
 % Optimization uses a multi-objective strategy, minimizing an error that takes into account multiple features at
@@ -478,3 +339,149 @@ save err_all.mat err_all
 
 %%
 clear parametri cost_function par_init constraints
+
+
+%% Plot of solutions to check - to be VERIFIED!
+PLOT = 0; 
+
+if PLOT
+    % close all
+    % param_all = [0.01, 0.03, 0.35*Cm(i), 0.05, 1.5*Cm(i)];
+    % T_tonic(i,1)=8;
+    % Tonic
+    Vm_tonic_lat = subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)})
+    Vm_tonic_1spk = subs(V2,{Ist,k_adap,k2,A2,k1,A1,Ie,t1},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
+    Vm_tonic_ss = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,Ie,tss},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
+    I2_tonic_lat = subs(I2_lat,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
+    I2_tonic_1spk = subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,Ie,t1},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
+    I2_tonic_ss = subs(I2_ss,{Ist,k_adap,k2,A2,k1,A1,Ie,tss},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
+
+
+    figure
+    Xax = [0 1000]
+    hton = ezplot(Vm_tonic_lat,Xax);
+    set(hton,'Color','r','LineStyle','-.')
+    hold on
+    line(Xax,[Vth(i) Vth(i)],'LineStyle','--');
+    h1 = ezplot((Vm_tonic_1spk),Xax);
+    set(h1,'Color','b','LineStyle','-.')
+    hss = ezplot(Vm_tonic_ss,Xax);
+    set(hss,'Color','m','LineStyle','-.')
+    ylim([-80 120])
+    title(['param = ', num2str(param_all)])
+
+
+    figure
+    Xax = [0 1000]
+    hton = ezplot(I2_tonic_lat,Xax);
+    set(hton,'Color','r','LineStyle','-.')
+    hold on
+    line(Xax,[Vth(i) Vth(i)],'LineStyle','--');
+    h1 = ezplot((I2_tonic_1spk),Xax);
+    set(h1,'Color','b','LineStyle','-.')
+    hss = ezplot(I2_tonic_ss,Xax);
+    set(hss,'Color','m','LineStyle','-.')
+    ylim([-80 120])
+    title(['Iadap - param = ', num2str(param_all)])
+
+
+    V_1(1) = subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
+    V_1(2) = subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(2,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
+    V_1(3)= subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
+    V_1(4)= subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{-Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
+
+    % I2_dep_lat(1) = subs(I2_lat,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(1,i),param_all(1),-1/tau_m(i),param_all(2),param_all(3),param_all(4),param_all(5)});
+    % I2_dep_1spk(1) = subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,Ie,t1},{Istim(1,i),param_all(1),-1/tau_m(i),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1)});
+    % I2_dep_ss(1) = subs(I2_ss,{Ist,k_adap,k2,A2,k1,A1,Ie,tss},{Istim(1,i),param_all(1),-1/tau_m(i),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1)});
+
+    figure;
+
+    Xax = [0 1000]
+    hlat = ezplot(V_1(1),Xax);
+    set(hlat,'Color','r')
+    hold on
+    line(Xax,[Vth(i) Vth(i)],'LineStyle','--');
+    h = ezplot(V_1(2),Xax);
+    set(h,'Color','r','LineStyle','--')
+    h = ezplot(V_1(3),Xax);
+    set(h,'Color','r','LineStyle',':')
+    h = ezplot(V_1(4),Xax);
+    set(h,'Color','r','LineStyle','-.')
+    ylim([-80 120])
+
+    V_2(1) = subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep1(i,1),param_all(6)});
+    V_2(2) = subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(2,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep2(i,1),param_all(6)});
+    V_2(3)= subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep3(i,1),param_all(6)});
+    V_2(4)= subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{-Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),125,param_all(6)});
+
+
+    %figure;
+    hon1 = ezplot(V_2(1),Xax);
+    set(hon1,'Color','b')
+    hold on
+    h = ezplot(V_2(2),Xax);
+    set(h,'Color','b','LineStyle','--')
+    h = ezplot(V_2(3),Xax);
+    set(h,'Color','b','LineStyle',':')
+    h = ezplot(V_2(4),Xax);
+    set(h,'Color','b','LineStyle','-.')
+
+
+    V_3(1) = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep1(i,1)*1.1,param_all(6)});
+    V_3(2) = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(2,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep2(i,1)*1.1,param_all(6)});
+    V_3(3)= subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep3(i,1)*1.1,param_all(6)});
+    V_3(4) = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{-Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep1(i,1)*1.1,param_all(6)});
+
+    hss = ezplot(V_3(1),Xax);
+    set(hss,'Color','m')
+    hold on
+    h = ezplot(V_3(2),Xax);
+    set(h,'Color','m','LineStyle','--')
+    h = ezplot(V_3(3),Xax);
+    set(h,'Color','m','LineStyle',':')
+    h = ezplot(V_3(4),Xax);
+    set(h,'Color','m','LineStyle','-.')
+
+    % legend([hlat,hon1,hss],{'lat','on','ss'},'Location', 'northeastoutside')
+
+    V_4 = subs(Vlb,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
+
+    h_lb = ezplot(V_4,Xax);
+    set(h_lb,'Color','g')
+    hold on
+
+    ylim([-80 120])
+
+    V_5 = subs(Vb,{Ist,k_adap,k2,A2,k1,A1,tlb,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),Tlb(1),param_all(6)});
+    h_b = ezplot(V_5,Xax);
+    set(h_b,'Color','c')
+    ylim([-120 120])
+
+    V_6 = subs(Vahp1,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
+    h_ahp1 = ezplot(V_6,Xax);
+    set(h_ahp1,'Color','k')
+    ylim([-120 120])
+
+    V_7 = subs(Vahp2,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
+    h_ahp2 = ezplot(V_7,Xax);
+    set(h_ahp2,'Color','k')
+    ylim([-120 120])
+
+    V_8 = subs(Vahp3,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
+    h_ahp3 = ezplot(V_8,Xax);
+    set(h_ahp3,'Color','k')
+    ylim([-200 200])
+    title(['param = ',num2str(param_all)])
+
+    figure;
+    ezplot(subs(Ihyp_lb,{Ist,k_adap,k2,A2,k1,A1},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5)}),Xax);
+
+    ylim([-120 120])
+
+    figure;
+    ezplot(subs(I2_lat,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5)}),Xax);
+    hold on
+    ezplot(subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1),param_all(6)}),Xax);
+    ezplot(subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1),param_all(6)}),Xax);
+
+end
