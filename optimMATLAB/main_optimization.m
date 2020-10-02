@@ -1,62 +1,114 @@
 % E-GLIF neuron model optimization
-% LIF neuron with an adaptive current (Iadap) for modelling subthreshold-related
-% mechanisms and spike-frequency adaption + a spike-triggered current (Idep)
-% modelling channel-related mechanisms; therefore, a simple linear model (useful for
+% LIF neuron + adaptive current for modelling subthreshold-related
+% mechanisms and Spike-Frequency Adaptation (SFA) + spike-triggered current modelling
+% Na channel-related fast mechanisms; therefore, a simple linear model (useful for
 % large scale simulations) and biologically plausible.
-% References: Geminiani et al., Front Neuroinform, 2018;
-%             Geminiani et al., Front Comput Neurosci, 2019.
+% References: [Geminiani et al., Front Neuroinform, 2018]; [Geminiani et al.,  Front Comput Neurosci, 2019]
 
-%%%%%%%%%%%%%%%%%%%%% PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Note: the parameter k2 should be set to -1/tau_m, for neurons with self-sustained
+% oscillations of the membrane potential (thus, oscillatory not damped solution of the model)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%% k2 should be set to -1/tau_m for neurons with self-sustained subthreshold oscillations;
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-clear
+ clear
 % clc
 
+% Neurons to optimize.
+% In this example:
+% MLI = Molecular Layer Interneurons from the cerebellum,
+% DCN = Deep Cerebellar Nuclei neurons (glutamatergic/GAD-negative large neurons)
+neu_names = { 'MLI', 'DCN'};
+i = 1;      % i-th neuron selected - 1 is MLI, 2 is DCN in this case
+nn = length(neu_names);    % Number of neurons
 
-% Example for cerebellar Molecular Layer Interneurons
+% Step 1: set passive membrane parameters (e.g. Cm, tau_m, etc) from neurophysiology experiments
+% for each of the neurons to be optimized. Reference values should be taken from papers
+% (for consistency with reference stimulation protocol) or neuroelectro.org
+% (if not available in papers).
+% Each parameter is saved in an array of values for each neuron
+Cm = [14.6, 142.0];        % [pF]
+tau_m = [-9.125, -33.0];   % [ms] should be the opposite of the given value - to fix
+t_ref = [1.59, 1.5];        % [ms]
+E_L = [-68.0, -45.0];      % [mV]
+Vth = [-53.0, -36.0];      % [mV]
+Vr = [-78.0, -55.0];       % = E_L-10 [mV]
 
-% Neuron parameters from neurophysiology: values from papers or neuroelectro.org
-Cm = [14.6];
-tau_m = [-9.125];   % [ms] should be the opposite of the given value!
-t_ref = [1.59 1.5];
-E_L = [-68.0];    % [mV]
-Vth = [-53.0];    % [mV]
-Vr = [-78.0];    % EL-10;
-nn = length(Cm);
+m_IF = [8.5 20.0 0.0];        % Mean intrinsic frequency - Lachamp, 2009
+sd_IF = [2.7 0 3.0 0.0];     % SE o Standard deviation intrinsic frequency - Lachamp, 2009 (reports SE over n = 6)
+            
 
-% Stimulus-response protocol
+% Step 2: set the target input-output (Istim-firing frequency) relationship from literature stimulation protocols
+% For target frequencies, mean and Standard Deviation (SD) values are considered, in order to fit a distribution
 
-% Autorhythm phase
-m_IF = [8.5];        % Mean intrinsic frequency [Lachamp et al., 2009]
-sd_IF = [2.7];      % Standard deviation of intrinsic frequency
+% Intrinsic firing frequency (/autorhythm/spontaneous firing):
+m_IF = [8.5, 30.0];        % Mean intrinsic frequency
+sd_IF = [2.7, 6.0];     % Standard Deviation of intrinsic frequency (!SE is reported in some studies!)
+
+% Depolarization phases:
+% * input current Istim = [3xnn] in [pA], so we use 3 values of input current for 3 depolarazion phases/steps,
+% for the nn neurons considered for optimization
+% * mean target frequency during depolarization m_Fdep = [3xnn] in [Hz]
+% * SD of target frequency during depolarization sd_Fdep = [3xnn] in [Hz]
+Istim = [[12.0; 24.0; 36.0], ...     % MLI - Stellate example from [Galliano et al., 2013 - Fig.S3]
+        Cm(i)*[1.0; 2.0; 3.0]];      % DCN - [Uusisaari et al., 2007 - Fig. 7]
+
+m_Fdep = [[30.0; 60.0; 90.0]...
+          [50.0; 80.0; 110.0]];
+
+sd_Fdep = [[1.0; 5.0; 10.0]...
+           [2.0; 5.0; 15.0]];
+
+% Target frequency at the end of a depolarization step should take into account SFA,
+% using the parameter SFA_gain = ratio between initial and steady-state firing rate [nnx3]
+% (it should be set to 1 if no SFA is present)
+SFA_gain = [1.0, 1.0, 1.0; ...
+            1.2, 1.2, 1.2];
+
+% Hyperpolarization phase:
+% * input current Iinh [pA]
+% * minimum Vm value during hyperpolarization Vinh_min [mV]
+% * steady-state Vm value during hyperpolarization Vinh_ss [mV]
+Iinh = [-24.0, -Cm(i)*1.5];
+Vinh_min = [-125, -110];
+Vinh_ss = [-115, -95];
+
+% Following hyperpolarization, a rebound burst is present in some neuron types
+% Burst frequency is equal to intrinsic frequency if no rebound burst is present (e.g. for MLI)
+m_Fburst = [m_IF(1), m_IF(2)*2];           % [Hz]
+sd_Fburst = [sd_IF(2), sd_IF(2)];
 
 
-% Depolarizing phases: Istim = [3xnn] in [pA]; 3 stimulation steps, nn neurons (1 in this case)
-Istim = [[12.0; 24.0; 36.0]];     % MLI - Stellate example from [Galliano et al., 2013 - Fig.S3]
+% Step 3: deriving a spike times distribution of 'ne' samples to fit during optimization
 
-% Output firing rate (initial)
-m_Fdep = [[30.0; 60.0; 90.0]];
-sd_Fdep = [[1.0; 5.0; 10.0]];
+ne = 10;      % 'ne' target values for each stimulation step
 
-% Spike-Frequency Adaptation (defined through gain, i.e. how much the steady-state frequency is different from the initial one)
-SFA_gain = [1 1 1];       % not present in Molecular Layer Interneurons, so SFA_gain is 1 in all 3 depolarizing phases
+% Target spiking times during spontaneous firing (Istim = 0)
+T_tonic(i,:) = (1./(sd_IF(i).*randn(1,ne) + m_IF(i)))*1000;
 
-% Hyperpolarizing phase
-Iinh = [-24.0];     % [pA] - input current
-Vinh_min = [-125];  % [mV]  - minimum membrane potential during hyperpolarization
-Vinh_ss = [-115];   % [mV]  - steady-state membrane potential during hyperpolarization
+% Avoid negative values in the distribution
+while ~isempty(find(T_tonic<0))
+    T_tonic(i,find(T_tonic<0))=(1./(sd_IF(i).*randn(1,length(find(T_tonic<0))) + m_IF(i)))*1000;
+end
+
+% Target spiking times during depolarization phases (Istim > 0)
+T_dep1(i,:) = (1./(sd_Fdep(1,i).*randn(1,ne) + m_Fdep(1,i)))*1000;
+T_dep2(i,:) = (1./(sd_Fdep(2,i).*randn(1,ne) + m_Fdep(2,i)))*1000;
+T_dep3(i,:) = (1./(sd_Fdep(3,i).*randn(1,ne) + m_Fdep(3,i)))*1000;
+
+Tdep = {T_dep1, T_dep2, T_dep3};
+
+% Target spiking times following hyperpolarization (Istim < 0) - to fit rebound bursting if present
+Tburst = (1./(sd_Fburst(i).*randn(1,ne) + m_Fburst(i)))*1000;
+Tlb = 5.*randn(1,ne) + 1000*(1/mean(m_IF(i)));
+
+% Target spiking times in the afterhyperpolarization (AHP) when returning to instrinsic firing after depolarization
+% In the cerebellum, taken into account only for optimization tests on the Golgi cell
+Tahp = [5.*randn(ne,1) + 80, 5.*randn(ne,1) + 100, 5.*randn(ne,1) + 120];
 
 
-i = 1;      % i-th chosen neuron
-
-
-% Model - 3D linear ODE system
-syms Vm(t) I1(t) I2(t)          % Variabili di stato
-syms Ie k_adap k1 k2 A1 A2 ...            % Parametri da ottimizzare
+%% Model definition - 3D linear ODE system
+syms Vm(t) I1(t) I2(t)          % State variables
+syms Ie k_adap k1 k2 A1 A2 ...            % Parameters to be optimized
      Ist
 
 
@@ -65,21 +117,17 @@ ode2(i) = diff(I1) == -k1*I1;
 ode3(i) = diff(I2) == k_adap*Vm - k2*I2 - k_adap*E_L(i);
 
 
+I = Ie+Ist;
 
-%%
-I = Ie+Ist;  	% Ie resta da ottimizzare (param(6)) perch� le correnti sono attive anche nella fase tonic, in assenza di input esterno.
-
-% Eigenvalues
+% Eigenvalues (l1, l2, l3)
 l1 = -k1;
 D = (1/tau_m(i)+k2)^2-4*(k2/tau_m(i)+k_adap/Cm(i));   % Discriminante
 l2 = 0.5*(-(1/tau_m(i)+k2)+sqrt(D));
 l3 = 0.5*(-(1/tau_m(i)+k2)-sqrt(D));
 
-% Eigenvectors
+% Eigenvectors (x1, x2, x3)
 csi = (k2-k1)*tau_m(i)/((1-k1*tau_m(i))*(k2-k1)*Cm(i)+k_adap*tau_m(i));
 csi2 = k_adap*tau_m(i)/((1-k1*tau_m(i))*(k2-k1)*Cm(i)+k_adap*tau_m(i));
-
-
 
 x1 = [csi; csi2; 1];      % Associated to l1
 
@@ -94,40 +142,15 @@ Sp = [(tau_m(i)*k2*I + E_L(i)*(tau_m(i)*k_adap+Cm(i)*k2))/(tau_m(i)*k_adap + Cm(
       I*k_adap*tau_m(i)/(tau_m(i)*k_adap + Cm(i)*k2);...                                        % I2
       0];                                                                                       % I1
 
-%% Optimization
-
-% clc
-% clear param_all
-
-ne = 10;
-
-T_tonic(i,:) = (1./(sd_IF(i).*randn(1,ne) + m_IF(i)))*1000;
-
-% Avoid negative values in the distribution
-while ~isempty(find(T_tonic<0))
-    T_tonic(i,find(T_tonic<0))=(1./(sd_IF(i).*randn(1,length(find(T_tonic<0))) + m_IF(i)))*1000;
-end
-
-T_dep1(i,:) = (1./(sd_Fdep(1,i).*randn(1,ne) + m_Fdep(1,i)))*1000;
-T_dep2(i,:) = (1./(sd_Fdep(2,i).*randn(1,ne) + m_Fdep(2,i)))*1000;
-T_dep3(i,:) = (1./(sd_Fdep(3,i).*randn(1,ne) + m_Fdep(3,i)))*1000;
-
-Tdep = {T_dep1,T_dep2,T_dep3};
-
-m_Fburst = [m_IF(i)];           % [Hz]     % No rebound burst
-sd_Fburst = [sd_IF(i)];        %[1];
-Tburst = (1./(sd_Fburst(i).*randn(1,ne) + m_Fburst(i)))*1000;
-Tlb = 5.*randn(1,ne) + 1000*(1/mean(m_IF(i)));
-
-Tahp = [5.*randn(ne,1) + 80, 5.*randn(ne,1) + 100, 5.*randn(ne,1) + 120];  %[80 100 120];
-%la soluzione seguente ipotizza che i parametri non siano tutti contemporaneamente
-% nulli e i vincoli tengono conto di: soluzione IMMAGINARIA e STABILE
-
+% The following solution supposes parameters not all zero at the same time
 
 % c1, c2, c3 are vectors containing the constants' values during the
-% different phases of optimization: latency, 1st spk, SS spk (tonic and exc1,2,3), lb, 1st burst ISI
+% the most significant phases in each step of the stimulation protocol considered for optimization:
+% latency, 1st spk time, steady-state (SS) spk time - during autorhythm and depolarazion phases,
+% latency (lb) and first spike time - during rebound bursting
+% time of the first spike at the end of depolarization (AHP) - considered only for neurons exhibiting it (e.g. cerebellar Golgi cells)
 
-% Phase 1: time to first spike (latency)
+% Phase 1: time to first spike (latency) - see also [Hertag et al., 2012]
 syms c1
 c1(1) = 0;
 c2(1) = ((E_L(i)-Sp(1))*L3+Sp(2))/(L3-L2);
@@ -136,10 +159,8 @@ c3(1) = ((Sp(1)-E_L(i))*L2-Sp(2))/(L3-L2);
 V1 = c1(1)*x1(1)*exp(l1*t)+c2(1)*x2(1)*exp(l2*t)+c3(1)*x3(1)*exp(l3*t)+Sp(1);
 I2_lat = c1(1)*x1(2)*exp(l1*t)+c2(1)*x2(2)*exp(l2*t)+c3(1)*x3(2)*exp(l3*t)+Sp(2);
 
-% Stessa soluzione di Hertag perch� le c.i. portano Idep ad essere nulla
-% fino al primo spike
-
 equ1 = V1 - Vth(i);
+
 
 % Phase 2: time of the second spike (onset)
 syms t1
@@ -156,6 +177,7 @@ V2 = ((c1(2))*(x1(1)))*exp(l1*t)+((c2(2))*(x2(1)))*exp(l2*t)+((c3(2))*(x3(1)))*e
 I2_1spk = c1(2)*x1(2)*exp(l1*t)+c2(2)*x2(2)*exp(l2*t)+c3(2)*x3(2)*exp(l3*t)+Sp(2);
 
 equ2 = V2-Vth(i);
+
 
 % Phase 3: steady-state spiking time
 syms tss
@@ -187,9 +209,9 @@ Ihyp_lb = c1(4)*x1(2)*exp(l1*t)+c2(4)*x2(2)*exp(l2*t)+c3(4)*x3(2)*exp(l3*t)+Sp(2
 
 equ4 = Vlb-Vth(i);
 
+
 % Phase 4: rebound burst
 syms tlb
-% tlb = 5;           % IPOTESI!!! Meglio metterlo nell'ottimizzazione
 dVlb = ((c1(4))*(x1(1))*(l1))*exp(l1*tlb)+((c2(4))*(x2(1))*(l2))*exp(l2*tlb)+((c3(4))*(x3(1))*(l3))*exp(l3*tlb);
 beta2 = dVlb-(Vr(i)-Vth(i))/tau_m(i)-A2/Cm(i)+A1/Cm(i); % Con A2 sottratto dal valore raggiunto al tempo dello spike
 
@@ -200,12 +222,11 @@ c3(5) = (beta2-A1*l1*csi-l2*Vr_)/(l3-l2);
 Vb = c1(5)*x1(1)*exp(l1*t)+c2(5)*x2(1)*exp(l2*t)+c3(5)*x3(1)*exp(l3*t)+Sp(1);
 equ5 = Vb-Vth(i);
 
-% Phase 5 AHP1
-% Vdep1_ss = subs(Sp(1),Ist,Istim(1,i));
-% Idep1_ss = subs(Sp(2),Ist,Istim(1,i));
-    %Vdep1_ss = subs(Sp(1),Ist,0);
-Vdep1_ss = E_L(i);              % Punto di partenza: un valore di potenziale tra Vr e Vth perch� il neurone sta sparando
-Idep1_ss = subs(Sp(2),Ist,Istim(1,i));              % TO BE CHECKED
+
+% Considered only for neurons having a pause after depolarization (e.g. cerebellar Golgi cells):
+% Phase 5: AHP1 (following Istim(1,i))
+Vdep1_ss = E_L(i);              % Starting point: a Vm value between Vr and Vth because the neuron is in spiking state
+Idep1_ss = subs(Sp(2),Ist,Istim(1,i));
 
 phi = -Vdep1_ss/tau_m(i)-Idep1_ss/Cm(i)+E_L(i)/tau_m(i)+Ie/Cm(i);
 c1(6) = 0;
@@ -216,10 +237,8 @@ Iahp1 = c1(6)*x1(2)*exp(l1*t)+c2(6)*x2(2)*exp(l2*t)+c3(6)*x3(2)*exp(l3*t)+Sp(2);
 
 equ6 = Vahp1-Vth(i);
 
-% Phase 6 AHP2
-% Vdep2_ss = subs(Sp(1),Ist,Istim(2,i));
-% Idep2_ss = subs(Sp(2),Ist,Istim(2,i));
-% Vdep2_ss = subs(Sp(1),Ist,0);
+
+% Phase 6: AHP2 (following Istim(2,i))
 Vdep2_ss = E_L(i);
 Idep2_ss = subs(Sp(2),Ist,Istim(2,i));
 
@@ -232,10 +251,8 @@ Iahp2 = c1(7)*x1(2)*exp(l1*t)+c2(7)*x2(2)*exp(l2*t)+c3(7)*x3(2)*exp(l3*t)+Sp(2);
 
 equ7 = Vahp2-Vth(i);
 
+
 % Phase 7 AHP3
-% Vdep3_ss = subs(Sp(1),Ist,Istim(3,i));
-% Idep3_ss = subs(Sp(2),Ist,Istim(3,i));
-% Vdep3_ss = subs(Sp(1),Ist,0);
 Vdep3_ss = E_L(i);
 Idep3_ss = subs(Sp(2),Ist,Istim(3,i));
 
@@ -247,7 +264,9 @@ Vahp3 = c1(8)*x1(1)*exp(l1*t)+c2(8)*x2(1)*exp(l2*t)+c3(8)*x3(1)*exp(l3*t)+Sp(1);
 Iahp3 = c1(8)*x1(2)*exp(l1*t)+c2(8)*x2(2)*exp(l2*t)+c3(8)*x3(2)*exp(l3*t)+Sp(2);
 
 equ8 = Vahp3-Vth(i);
-%% Plot delle 3 soluzioni per check
+
+
+%% Plot of solutions to check - to be VERIFIED!
 % close all
 % param_all = [0.01, 0.03, 0.35*Cm(i), 0.05, 1.5*Cm(i)];
 % T_tonic(i,1)=8;
@@ -387,11 +406,14 @@ ezplot(subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(3,i),param_all(1),par
 
 
 
-% Optimization run (minimization of cost function and constraints)
+%% Optimization
+% Optimization uses a multi-objective strategy, minimizing an error that takes into account multiple features at
+% the same time. So the found solution is a compromise between all the features, while also aiming at fulfilling the constraints
 delta = (-1/tau_m(i)-k2)^2-4*(-k2/tau_m(i)+k_adap/Cm(i));     % [1/ms^2]
 param3_low = 3/((1/(m_IF(i)+3*sd_IF(i)))*1000);
 param3_high = 3/t_ref(i);
 
+% Global variables for saving optimization info
 global par cf w con error_all
 w = 1;          % The weight to consider whether Vm reaches the threshold or not
 
@@ -399,15 +421,17 @@ low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.000001,0.0001,3/((1/m_IF(i))*10
 up_2 = 10*low(2);
 up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,10.0,3/t_ref(i),10.0,10.0];
 
+% Linear inequality constraints: A2<A1; kadap>(Cm/tau_m)*k2 -> in normalized
+% ranges!!
+% Att: the first constraints should be modified if A1 and A2 are not in the same ranges
 A = [0 0 1 0 -1 0;(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
-        % Linear constraints: A2<A1; kadap>(Cm/tau_m)*k2 -> in normalized
-        % ranges!! Att: il primo vincolo va modificato se A1 e A2 non hanno
-        % gli stessi ranges!
 b = [0;low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
 
+% Linear equality constraints
 Aeq = [];
 beq = [];
 
+% Lower and upper bounds of normalized parameters
 lb = zeros(6,1);
 ub = ones(6,1);
 
@@ -418,7 +442,7 @@ for nopt = 1:10
     error_all = [];
 
     start_param = rand(6,1)'
-    %Check that the constraints are satisfied at initial point
+    % Check that the constraints are satisfied at initial point
     con1 = (confun_eglif(start_param,low,up,i,Iinh,Cm,tau_m,E_L,Vth, Vinh_ss,t_ref,L2, L3, Sp, T_tonic, Istim,V1,V2,Vss, T_dep3, SFA_gain, Iahp1, Iahp2, Iahp3))
     while con1(1)>0 || con1(2)>0 || con1(3)>0  || con1(4)>0
         start_param = rand(6,1)'
@@ -427,6 +451,7 @@ for nopt = 1:10
 
     equs = [equ1;equ2;equ3;equ4;equ5;equ6;equ7;equ8];
 
+% Optimization algorithm options
     options = optimoptions(@fmincon,'Algorithm','sqp','Display','iter-detailed','TolX',1e-3,'TolCon',1e-3,...
         'TolFun',1e-3,'ObjectiveLimit',0.1,'MaxFunEvals',200,'MaxIter',200);         %,'ScaleProblem','obj-and-constr');          % Test also different algorithms!!!!
 
@@ -444,10 +469,12 @@ for nopt = 1:10
     nopt
 end
 
+% Saving optimization data
 save param.mat parametri
 save cost.mat cost_function
 save init_par.mat par_init
 save constr.mat constraints
 save err_all.mat err_all
+
 %%
 clear parametri cost_function par_init constraints
