@@ -33,6 +33,9 @@ E_L = [-68.0, -45.0];      % [mV]
 Vth = [-53.0, -36.0];      % [mV]
 Vr = [-78.0, -55.0];       % = E_L-10 [mV]
 
+m_IF = [8.5 20.0 0.0];        % Mean intrinsic frequency - Lachamp, 2009
+sd_IF = [2.7 0 3.0 0.0];     % SE o Standard deviation intrinsic frequency - Lachamp, 2009 (reports SE over n = 6)
+            
 
 % Step 2: set the target input-output (Istim-firing frequency) relationship from literature stimulation protocols
 % For target frequencies, mean and Standard Deviation (SD) values are considered, in order to fit a distribution

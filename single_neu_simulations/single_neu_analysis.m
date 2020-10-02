@@ -4,8 +4,8 @@ clear
 n_sim = 1;
 
 neu=1;
-neu_type = 2;       % 1 = PC; 2 = MLI; 3 = DCN
-neu_names = {'PC','MLI','DCN'};
+neu_type = 3;       % 1 = PC; 2 = MLI; 3 = DCN
+neu_names = {'PC','MLI','GoC'};
 PC_BPR = 0;
 
 protocol = 1;       % 1 = protocol from literature; 2 = protocol from experiments
@@ -13,12 +13,12 @@ protocol = 1;       % 1 = protocol from literature; 2 = protocol from experiment
 deltaSFA=[100 100 100 200 250];
 np = 9;     % Numero fasi del protocollo di stimolazione: 9 steps di corrente
 
-if PC_BPR 
-    durata = [10000 1000 1000 1000 1000 10 1000 1000 1000];    
+if PC_BPR
+    durata = [10000 1000 1000 1000 1000 10 1000 1000 1000];
     durata2 = [10000 1000 1000 1000 1000 10 1000 1000 1000];
     ep = 2;     % Numero fasi eccitatorie
 else
-    durata = [10000 1000 1000 1000 1000 1000 1000 1000 1000];    
+    durata = [10000 1000 1000 1000 1000 1000 1000 1000 1000];
     durata2 = [10000 1000 1000 1000 1000 1000 1000 1000 1000];    % Durata degli intervalli in cui calcolare la frequenza per il plot finale
     ep = 3;     % Numero fasi eccitatorie
 end
@@ -53,20 +53,20 @@ dur_dep = 1000;
 dur_res = 30;       %[ms]
 if neu_type == 2 || neu_type == 3
     if n_sim==1
-        mult = load([path,'eglif_multimeter-72-0.dat']);
-        spk = load([path,'eglif_spikes-71-0.gdf']);
+        mult = load([path,'eglif_',neu_names{neu_type},'multimeter-72-0.dat']);
+        spk = load([path,'eglif_',neu_names{neu_type},'spikes-71-0.gdf']);
     else
-        mult = load([path,'eglif_multimeter-72-0_',neu_names{neu_type},'1.dat']);
-        spk = load([path,'eglif_spikes-71-0_',neu_names{neu_type},'1.gdf']);
+        mult = load([path,'eglif_',neu_names{neu_type},'multimeter-72-0_',neu_names{neu_type},'1.dat']);
+        spk = load([path,'eglif_',neu_names{neu_type},'spikes-71-0_',neu_names{neu_type},'1.gdf']);
     end
-        
+
 else
     if n_sim == 1
-        mult = load([path,'eglif_multimeter-76-0.dat']); 
-        spk = load([path,'eglif_spikes-73-0.gdf']);
+        mult = load([path,'eglif_',neu_names{neu_type},'multimeter-76-0.dat']);
+        spk = load([path,'eglif_',neu_names{neu_type},'spikes-73-0.gdf']);
     else
-        mult = load([path,'eglif_multimeter-76-0_',neu_names{neu_type},'1.dat']); 
-        spk = load([path,'eglif_spikes-73-0_',neu_names{neu_type},'1.gdf']);
+        mult = load([path,'eglif_',neu_names{neu_type},'multimeter-76-0_',neu_names{neu_type},'1.dat']);
+        spk = load([path,'eglif_',neu_names{neu_type},'spikes-73-0_',neu_names{neu_type},'1.gdf']);
     end
 end
 x = [0:1:length(mult(:,1))-1];
@@ -84,8 +84,8 @@ hold on
 plot(mult(:,2),-85+I/32,'r','LineWidth',2)
 hold on
 for sp = 1:length(spk)
-   line([spk(sp,2) spk(sp,2)],[-20 -10],'Color','k','LineWidth',2) 
-   line([spk(sp,2) spk(sp,2)],[mult(1,4)-0.5 -20],'LineStyle','--','Color','k','LineWidth',1) 
+   line([spk(sp,2) spk(sp,2)],[-20 -10],'Color','k','LineWidth',2)
+   line([spk(sp,2) spk(sp,2)],[mult(1,4)-0.5 -20],'LineStyle','--','Color','k','LineWidth',1)
 end
 xlabel('Time [s]')
 ylabel('V_m [mV]')
@@ -128,19 +128,19 @@ for sm = 1:n_sim
 
 if neu_type == 2 || neu_type == 3
     if n_sim==1
-        mult = load([path,'eglif_multimeter-72-0.dat']);     % The number depends on the implicit index of the created node
-        spk = load([path,'eglif_spikes-71-0.gdf']);
+        mult = load([path,'eglif_',neu_names{neu_type},'multimeter-72-0.dat']);     % The number depends on the implicit index of the created node
+        spk = load([path,'eglif_',neu_names{neu_type},'spikes-71-0.gdf']);
     else
-        mult = load([path,'eglif_multimeter-72-0_',neu_names{neu_type},num2str(sm),'.dat']);     
-        spk = load([path,'eglif_spikes-71-0_',neu_names{neu_type},num2str(sm),'.gdf']);
+        mult = load([path,'eglif_',neu_names{neu_type},'multimeter-72-0_',neu_names{neu_type},num2str(sm),'.dat']);
+        spk = load([path,'eglif_',neu_names{neu_type},'spikes-71-0_',neu_names{neu_type},num2str(sm),'.gdf']);
     end
 else
     if n_sim ==1
-        mult = load([path,'mihalas_multimeter-76-0.dat']);     
-        spk = load([path,'mihalas_spikes-73-0.gdf']);
+        mult = load([path,'eglif_',neu_names{neu_type},'multimeter-76-0.dat']);
+        spk = load([path,'eglif_',neu_names{neu_type},'spikes-73-0.gdf']);
     else
-        mult = load([path,'mihalas_multimeter-72-0_',neu_names{neu_type},num2str(sm),'.dat']);     
-        spk = load([path,'mihalas_spikes-71-0_',neu_names{neu_type},num2str(sm),'.gdf']);
+        mult = load([path,'eglif_',neu_names{neu_type},'multimeter-72-0_',neu_names{neu_type},num2str(sm),'.dat']);
+        spk = load([path,'eglif_',neu_names{neu_type},'spikes-71-0_',neu_names{neu_type},num2str(sm),'.gdf']);
     end
 end
 spk_neu = (spk(find(spk(:,1)==neu),2));
@@ -161,12 +161,12 @@ for i = 1:length(durata2)
         freq_tonic_neu(i) = 0;
     end
     if PC_BPR && i == 6
-       spk_burst = spi;        
+       spk_burst = spi;
     end
     if PC_BPR && i == 7
-       spk_pause = spi;        
+       spk_pause = spi;
     end
-    if i == long_phase 
+    if i == long_phase
         if size(spi,1)>1
              coefvar = std(ISI_neu{i})/mean(ISI_neu{i})
         else
@@ -177,11 +177,11 @@ end
 
 
 % SFA new method
-SFA = [];   
+SFA = [];
 for i = 1:ep             % Num dep phases
     f1s(i) = 1/(mean(ISI_neu{2*i}(end-5:end))*0.001);
     fin(i) = 1/(mean(ISI_neu{2*i}(1:2))*0.001);
-    SFA=[SFA f1s(i)/fin(i)];    
+    SFA=[SFA f1s(i)/fin(i)];
 end
 
 if PC_BPR
@@ -223,13 +223,13 @@ end
     lat_rebs(sm,:) = lat_reb;
 
 
-% 
+%
 %     clear spi spk_neu freq_tonicGoC freq_tonicGoC_ISI ISI_GoC CV SFA f1s fin p1s pin...
 %         freq_rebound spk_rebound ISI_rebound spk_res ISI_res ISI_res_step_first first_res last_res...
 %         mean_res ISI_burst burst_res lat_res ISI_res_step
-    
+
 end
-% 
+%
 freq_all{protocol} = frequencies;
 freq_all_ISI{protocol} = frequencies_ISI;
 CV_all{protocol} = CVs;
@@ -238,6 +238,17 @@ f1s_all{protocol} = freq_1s;
 SFA_all{protocol} = SFAs;
 reb_all{protocol} = freq_rebounds;
 
+
+%% Vm plot
+plot(mult(find(mult(:,1)==neu),3),'k')
+hold on
+plot(mult(find(mult(:,1)==neu),4),'r--')
+%xlim([0 sum(durata)])c
+ylim([-150 0])
+ylabel('V [mV]')
+xlabel('t [ms]')
+title('EGLIF neuron')
+hold on
 %% Plot frequencies, SFA and resonance parameters
 
 % Frequencies
@@ -295,12 +306,12 @@ title(['f-I_s_t_i_m plot ',neu_names{neu_type}])
 saveas(gcf,['If_ModLit',neu_names{neu_type},'.fig']);
 saveas(gcf,['If_ModLit',neu_names{neu_type},'.bmp'])
 saveas(gcf,['If_ModLit',neu_names{neu_type},'.eps'])
-   
+
 %%
 % SFA - example for GoC (not computed for MLI)
 xSFA = [30 50 100 150]
 SFA_des = [0.9 0.6 0.4 0.3;0.05 0.05 0.05 0.1];  %mean; SD
-figure; 
+figure;
 plot(mean(freq_in,1),mean(SFAs,1),'k^')
 hold on
 h=errorbar(mean(freq_in,1),mean(SFAs,1),std(SFAs,1,1),'k')
@@ -319,5 +330,3 @@ grid on
 saveas(gcf,'SFA_ModLit.fig')
 saveas(gcf,'SFA_ModLit.bmp')
 saveas(gcf,'SFA_ModLit.eps')
-
-
