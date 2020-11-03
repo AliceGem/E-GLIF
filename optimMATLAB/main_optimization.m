@@ -15,10 +15,10 @@
 
 % Neurons to optimize.
 % In this example:
-% MLI = Molecular Layer Interneurons from the cerebellum,
+% MLI = Deep Cerebellar Nuclei neurons (glycinergic-inactive),
 % DCN = Deep Cerebellar Nuclei neurons (glutamatergic/GAD-negative large neurons)
-neu_names = { 'MLI', 'DCN'};
-i = 1;      % i-th neuron selected - 1 is MLI, 2 is DCN in this case
+neu_names = { 'DCN_gly', 'DCN'};
+i = 1;      % i-th neuron selected - 1 is DCN_gly, 2 is DCN in this case
 nn = length(neu_names);    % Number of neurons
 
 % Step 1: set passive membrane parameters (e.g. Cm, tau_m, etc) from neurophysiology experiments
@@ -26,54 +26,70 @@ nn = length(neu_names);    % Number of neurons
 % (for consistency with reference stimulation protocol) or neuroelectro.org
 % (if not available in papers).
 % Each parameter is saved in an array of values for each neuron
-Cm = [14.6, 142.0];        % [pF]
-tau_m = [-9.125, -33.0];   % [ms] should be the opposite of the given value - to fix
-t_ref = [1.59, 1.5];        % [ms]
-E_L = [-68.0, -45.0];      % [mV]
-Vth = [-53.0, -36.0];      % [mV]
-Vr = [-78.0, -55.0];       % = E_L-10 [mV]
+Cm = [104.0, 142.0];        % [pF]
+tau_m = [-45.76, -33.0];   % [ms] should be the opposite of the given value - to fix
+t_ref = [1.65, 1.5];        % [ms]
+E_L = [-40, -45.0];      % [mV]
+Vth = [-30, -36.0];      % [mV]
+Vr = [-50, -55.0];       % = E_L-10 [mV]
 
-m_IF = [8.5 20.0 0.0];        % Mean intrinsic frequency - Lachamp, 2009
-sd_IF = [2.7 0 3.0 0.0];     % SE o Standard deviation intrinsic frequency - Lachamp, 2009 (reports SE over n = 6)
-            
 
 % Step 2: set the target input-output (Istim-firing frequency) relationship from literature stimulation protocols
 % For target frequencies, mean and Standard Deviation (SD) values are considered, in order to fit a distribution
 
 % Intrinsic firing frequency (/autorhythm/spontaneous firing):
-m_IF = [8.5, 30.0];        % Mean intrinsic frequency
-sd_IF = [2.7, 6.0];     % Standard Deviation of intrinsic frequency (!SE is reported in some studies!)
+m_IF = [0, 30.0];        % Mean intrinsic frequency
+sd_IF = [0, 6.0];     % Standard Deviation of intrinsic frequency (!SE is reported in some studies!)
 
 % Depolarization phases:
 % * input current Istim = [3xnn] in [pA], so we use 3 values of input current for 3 depolarazion phases/steps,
 % for the nn neurons considered for optimization
 % * mean target frequency during depolarization m_Fdep = [3xnn] in [Hz]
 % * SD of target frequency during depolarization sd_Fdep = [3xnn] in [Hz]
-Istim = [[12.0; 24.0; 36.0], ...     % MLI - Stellate example from [Galliano et al., 2013 - Fig.S3]
+Istim = [Cm(i)*[1.5; 2.1; 2.7], ...     % DCN_gly [GlyT2+ neurons, UUsisaari 2009]
         Cm(i)*[1.0; 2.0; 3.0]];      % DCN - [Uusisaari et al., 2007 - Fig. 7]
 
-m_Fdep = [[30.0; 60.0; 90.0]...
+% Computation of istantaneous frequencies starting from mean frequencies
+f_mean = [16.0, 27.0, 40.0, 48.0, 65.0]; % from Uusisaari 2009
+I_stim = [1.5, 1.8, 2.1, 2.4, 2.7]; % from Uusisaari 2009
+coeff = polyfit(I_stim,f_mean,1);
+x = linspace(I_stim(1),I_stim(end),1000);
+x0 = 2.4; % (pA/pF) SFA test and stimulation value taken from Uusisaari 2009
+y0 = 100; % (Hz) SFA test and stimulation value taken from Uusisaari 2009
+y = coeff(1)*(x-x0)+y0;
+
+f_ist = zeros(3,1);
+f_ist(1) = y(1); % 1.5pA/pF
+f_ist(3) = y(end); % 2.7pA/pF
+x_possible = find(x<=2.1);
+f_ist(2) = y(x_possible(end)); % 2.1pA/pF
+
+f_mean = [16.0; 40.0; 65.0]; % If we want to optimize considering mean frequencies
+
+f_ist = [32;100;130];
+
+m_Fdep = [round(f_ist)...
           [50.0; 80.0; 110.0]];
 
-sd_Fdep = [[1.0; 5.0; 10.0]...
+sd_Fdep = [[5.0; 10.0; 15.0]...
            [2.0; 5.0; 15.0]];
 
 % Target frequency at the end of a depolarization step should take into account SFA,
 % using the parameter SFA_gain = ratio between initial and steady-state firing rate [nnx3]
 % (it should be set to 1 if no SFA is present)
-SFA_gain = [1.0, 1.0, 1.0; ...
+SFA_gain = [2.5, 2.5, 2.5; ...
             1.2, 1.2, 1.2];
 
 % Hyperpolarization phase:
 % * input current Iinh [pA]
 % * minimum Vm value during hyperpolarization Vinh_min [mV]
 % * steady-state Vm value during hyperpolarization Vinh_ss [mV]
-Iinh = [-24.0, -Cm(i)*1.5];
-Vinh_min = [-125, -110];
-Vinh_ss = [-115, -95];
+Iinh = [-Cm(i)*1.5, -Cm(i)*1.5]; % valori inventati da me
+Vinh_min = [-105, -110];
+Vinh_ss = [-90, -95];
 
 % Following hyperpolarization, a rebound burst is present in some neuron types
-% Burst frequency is equal to intrinsic frequency if no rebound burst is present (e.g. for MLI)
+% Burst frequency is equal to intrinsic frequency if no rebound burst is present (e.g. for DCN_gly)
 m_Fburst = [m_IF(1), m_IF(2)*2];           % [Hz]
 sd_Fburst = [sd_IF(2), sd_IF(2)];
 
@@ -265,28 +281,36 @@ Iahp3 = c1(8)*x1(2)*exp(l1*t)+c2(8)*x2(2)*exp(l2*t)+c3(8)*x3(2)*exp(l3*t)+Sp(2);
 
 equ8 = Vahp3-Vth(i);
 
-
-
 %% Optimization
 % Optimization uses a multi-objective strategy, minimizing an error that takes into account multiple features at
 % the same time. So the found solution is a compromise between all the features, while also aiming at fulfilling the constraints
 delta = (-1/tau_m(i)-k2)^2-4*(-k2/tau_m(i)+k_adap/Cm(i));     % [1/ms^2]
-param3_low = 3/((1/(m_IF(i)+3*sd_IF(i)))*1000);
+param3_low = 3/((1/(m_IF(i)+3*sd_IF(i)))*1000); % param3 = k1
 param3_high = 3/t_ref(i);
 
 % Global variables for saving optimization info
 global par cf w con error_all
 w = 1;          % The weight to consider whether Vm reaches the threshold or not
-
-low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.000001,0.0001,3/((1/m_IF(i))*1000),0.0001,0.0001];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
+% low = K_adap, K2, A2, K1, A1, I_e
+low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.00001,0.001,3/((1/m_IF(i))*1000),0.001,-150];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
 up_2 = 10*low(2);
-up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,10.0,3/t_ref(i),10.0,10.0];
+up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,100,3/t_ref(i),600,-50];
+
+% low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.025,0.001,3/((1/m_IF(i))*1000),0.001,-150];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
+% up_2 = 5*low(2);
+% up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,100,3/t_ref(i),600,-50];
 
 % Linear inequality constraints: A2<A1; kadap>(Cm/tau_m)*k2 -> in normalized
 % ranges!!
-% Att: the first constraints should be modified if A1 and A2 are not in the same ranges
-A = [0 0 1 0 -1 0;(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
-b = [0;low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
+% Att: the first constraints should be modified if A1 and A2 are not in the
+% same ranges (should be converted in the original range as done for Kadap
+% and K2)
+% A = [0 0 1 0 -1 0;(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
+% b = [0;low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
+% A = [0 0 (up(3)-low(3)) 0 -(up(5)-low(5)) 0;(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
+% b = [low(5)-low(3);low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
+A = [(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
+b = [low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
 
 % Linear equality constraints
 Aeq = [];
@@ -305,7 +329,7 @@ for nopt = 1:10
     start_param = rand(6,1)'
     % Check that the constraints are satisfied at initial point
     con1 = (confun_eglif(start_param,low,up,i,Iinh,Cm,tau_m,E_L,Vth, Vinh_ss,t_ref,L2, L3, Sp, T_tonic, Istim,V1,V2,Vss, T_dep3, SFA_gain, Iahp1, Iahp2, Iahp3))
-    while con1(1)>0 || con1(2)>0 || con1(3)>0  || con1(4)>0
+    while con1(1)>0 || con1(2)>0 %|| con1(3)>0  || con1(4)>0
         start_param = rand(6,1)'
         con1 = (confun_eglif(start_param,low,up,i,Iinh,Cm,tau_m,E_L,Vth, Vinh_ss,t_ref,L2, L3, Sp, T_tonic, Istim,V1,V2,Vss, T_dep3, SFA_gain, Iahp1, Iahp2, Iahp3))
     end
@@ -314,174 +338,32 @@ for nopt = 1:10
 
 % Optimization algorithm options
     options = optimoptions(@fmincon,'Algorithm','sqp','Display','iter-detailed','TolX',1e-3,'TolCon',1e-3,...
-        'TolFun',1e-3,'ObjectiveLimit',0.1,'MaxFunEvals',200,'MaxIter',200);         %,'ScaleProblem','obj-and-constr');          % Test also different algorithms!!!!
-
-
+        'TolFun',1e-2,'ObjectiveLimit',0.1,'MaxFunEvals',100,'MaxIter',100);         %,'ScaleProblem','obj-and-constr');          % Test also different algorithms!!!!
+    
 % % Separating linear and non linear constraints - error on area Vm
     [param_all,fval_all] = ...
-    fmincon(@(param)objfun_eglif(param,low,up,equs,[1.2 1/2 1/4 1/6 1.1 1 1.1 1.1 1 1 1 1 1],Istim,i,T_tonic, Tdep, Tburst, Tlb, t_ref, SFA_gain,tau_m, Cm,E_L,Vth,Vr,Sp,L2,L3,Iinh(i),Tahp,Vinh_ss),start_param,...
+    fmincon(@(param)objfun_eglif_gly(param,low,up,equs,[1.2 1/2 1/4 1/6 1.1 1 1.1 1.1 1 1 1 1 1],Istim,i,T_tonic, Tdep, Tburst, Tlb, t_ref, SFA_gain,tau_m, Cm,E_L,Vth,Vr,Sp,L2,L3,Iinh(i),Tahp,Vinh_ss),start_param,...
         A,b,Aeq,beq,lb,ub,@(param)confun_eglif(param,low,up,i,Iinh,Cm,tau_m,E_L,Vth, Vinh_ss,t_ref,L2, L3, Sp, T_tonic, Istim,V1,V2,Vss, T_dep3, SFA_gain, Iahp1, Iahp2, Iahp3),options);
 
     parametri{nopt} = par;
+    
     cost_function{nopt} = cf;
     par_init(nopt,:) = start_param;
     constraints{nopt} = con;
     err_all{nopt} = error_all;
     nopt
+    
+    parameters = parametri{1,nopt};
+    param_all = parameters(end,:);
+    disp('valori parametri riportati ai range originali')
+    optimal_parameters = param_all.*(up-low)+low
+
 end
+
 
 % Saving optimization data
-save param.mat parametri
-save cost.mat cost_function
-save init_par.mat par_init
-save constr.mat constraints
-save err_all.mat err_all
-
-%%
-clear parametri cost_function par_init constraints
-
-
-%% Plot of solutions to check - to be VERIFIED!
-PLOT = 0; 
-
-if PLOT
-    % close all
-    % param_all = [0.01, 0.03, 0.35*Cm(i), 0.05, 1.5*Cm(i)];
-    % T_tonic(i,1)=8;
-    % Tonic
-    Vm_tonic_lat = subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)})
-    Vm_tonic_1spk = subs(V2,{Ist,k_adap,k2,A2,k1,A1,Ie,t1},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
-    Vm_tonic_ss = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,Ie,tss},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
-    I2_tonic_lat = subs(I2_lat,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-    I2_tonic_1spk = subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,Ie,t1},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
-    I2_tonic_ss = subs(I2_ss,{Ist,k_adap,k2,A2,k1,A1,Ie,tss},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6),T_tonic(i,1)});
-
-
-    figure
-    Xax = [0 1000]
-    hton = ezplot(Vm_tonic_lat,Xax);
-    set(hton,'Color','r','LineStyle','-.')
-    hold on
-    line(Xax,[Vth(i) Vth(i)],'LineStyle','--');
-    h1 = ezplot((Vm_tonic_1spk),Xax);
-    set(h1,'Color','b','LineStyle','-.')
-    hss = ezplot(Vm_tonic_ss,Xax);
-    set(hss,'Color','m','LineStyle','-.')
-    ylim([-80 120])
-    title(['param = ', num2str(param_all)])
-
-
-    figure
-    Xax = [0 1000]
-    hton = ezplot(I2_tonic_lat,Xax);
-    set(hton,'Color','r','LineStyle','-.')
-    hold on
-    line(Xax,[Vth(i) Vth(i)],'LineStyle','--');
-    h1 = ezplot((I2_tonic_1spk),Xax);
-    set(h1,'Color','b','LineStyle','-.')
-    hss = ezplot(I2_tonic_ss,Xax);
-    set(hss,'Color','m','LineStyle','-.')
-    ylim([-80 120])
-    title(['Iadap - param = ', num2str(param_all)])
-
-
-    V_1(1) = subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-    V_1(2) = subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(2,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-    V_1(3)= subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-    V_1(4)= subs(V1,{Ist,k_adap,k2,A2,k1,A1,Ie},{-Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-
-    % I2_dep_lat(1) = subs(I2_lat,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(1,i),param_all(1),-1/tau_m(i),param_all(2),param_all(3),param_all(4),param_all(5)});
-    % I2_dep_1spk(1) = subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,Ie,t1},{Istim(1,i),param_all(1),-1/tau_m(i),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1)});
-    % I2_dep_ss(1) = subs(I2_ss,{Ist,k_adap,k2,A2,k1,A1,Ie,tss},{Istim(1,i),param_all(1),-1/tau_m(i),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1)});
-
-    figure;
-
-    Xax = [0 1000]
-    hlat = ezplot(V_1(1),Xax);
-    set(hlat,'Color','r')
-    hold on
-    line(Xax,[Vth(i) Vth(i)],'LineStyle','--');
-    h = ezplot(V_1(2),Xax);
-    set(h,'Color','r','LineStyle','--')
-    h = ezplot(V_1(3),Xax);
-    set(h,'Color','r','LineStyle',':')
-    h = ezplot(V_1(4),Xax);
-    set(h,'Color','r','LineStyle','-.')
-    ylim([-80 120])
-
-    V_2(1) = subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep1(i,1),param_all(6)});
-    V_2(2) = subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(2,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep2(i,1),param_all(6)});
-    V_2(3)= subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep3(i,1),param_all(6)});
-    V_2(4)= subs(V2,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{-Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),125,param_all(6)});
-
-
-    %figure;
-    hon1 = ezplot(V_2(1),Xax);
-    set(hon1,'Color','b')
-    hold on
-    h = ezplot(V_2(2),Xax);
-    set(h,'Color','b','LineStyle','--')
-    h = ezplot(V_2(3),Xax);
-    set(h,'Color','b','LineStyle',':')
-    h = ezplot(V_2(4),Xax);
-    set(h,'Color','b','LineStyle','-.')
-
-
-    V_3(1) = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep1(i,1)*1.1,param_all(6)});
-    V_3(2) = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(2,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep2(i,1)*1.1,param_all(6)});
-    V_3(3)= subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep3(i,1)*1.1,param_all(6)});
-    V_3(4) = subs(Vss,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{-Istim(1,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_dep1(i,1)*1.1,param_all(6)});
-
-    hss = ezplot(V_3(1),Xax);
-    set(hss,'Color','m')
-    hold on
-    h = ezplot(V_3(2),Xax);
-    set(h,'Color','m','LineStyle','--')
-    h = ezplot(V_3(3),Xax);
-    set(h,'Color','m','LineStyle',':')
-    h = ezplot(V_3(4),Xax);
-    set(h,'Color','m','LineStyle','-.')
-
-    % legend([hlat,hon1,hss],{'lat','on','ss'},'Location', 'northeastoutside')
-
-    V_4 = subs(Vlb,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-
-    h_lb = ezplot(V_4,Xax);
-    set(h_lb,'Color','g')
-    hold on
-
-    ylim([-80 120])
-
-    V_5 = subs(Vb,{Ist,k_adap,k2,A2,k1,A1,tlb,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),Tlb(1),param_all(6)});
-    h_b = ezplot(V_5,Xax);
-    set(h_b,'Color','c')
-    ylim([-120 120])
-
-    V_6 = subs(Vahp1,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-    h_ahp1 = ezplot(V_6,Xax);
-    set(h_ahp1,'Color','k')
-    ylim([-120 120])
-
-    V_7 = subs(Vahp2,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-    h_ahp2 = ezplot(V_7,Xax);
-    set(h_ahp2,'Color','k')
-    ylim([-120 120])
-
-    V_8 = subs(Vahp3,{Ist,k_adap,k2,A2,k1,A1,Ie},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),param_all(6)});
-    h_ahp3 = ezplot(V_8,Xax);
-    set(h_ahp3,'Color','k')
-    ylim([-200 200])
-    title(['param = ',num2str(param_all)])
-
-    figure;
-    ezplot(subs(Ihyp_lb,{Ist,k_adap,k2,A2,k1,A1},{0,param_all(1),param_all(2),param_all(3),param_all(4),param_all(5)}),Xax);
-
-    ylim([-120 120])
-
-    figure;
-    ezplot(subs(I2_lat,{Ist,k_adap,k2,A2,k1,A1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5)}),Xax);
-    hold on
-    ezplot(subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,t1,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1),param_all(6)}),Xax);
-    ezplot(subs(I2_1spk,{Ist,k_adap,k2,A2,k1,A1,tss,Ie},{Istim(3,i),param_all(1),param_all(2),param_all(3),param_all(4),param_all(5),T_tonic(i,1),param_all(6)}),Xax);
-
-end
+save param_new_optim_33.mat parametri
+save cost_new_optim_33.mat cost_function
+save init_par_new_optim_33.mat par_init
+save constr_new_optim_33.mat constraints
+save err_all_new_optim_33.mat err_all
