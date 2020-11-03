@@ -15,10 +15,10 @@
 
 % Neurons to optimize.
 % In this example:
-% MLI = Deep Cerebellar Nuclei neurons (glycinergic-inactive),
+% MLI = CA1 Pyramidal Cell,
 % DCN = Deep Cerebellar Nuclei neurons (glutamatergic/GAD-negative large neurons)
-neu_names = { 'DCN_gly', 'DCN'};
-i = 1;      % i-th neuron selected - 1 is DCN_gly, 2 is DCN in this case
+neu_names = { 'CA1-PC', 'DCN'};
+i = 1;      % i-th neuron selected - 1 is CA1 PC, 2 is DCN in this case
 nn = length(neu_names);    % Number of neurons
 
 % Step 1: set passive membrane parameters (e.g. Cm, tau_m, etc) from neurophysiology experiments
@@ -26,12 +26,14 @@ nn = length(neu_names);    % Number of neurons
 % (for consistency with reference stimulation protocol) or neuroelectro.org
 % (if not available in papers).
 % Each parameter is saved in an array of values for each neuron
-Cm = [104.0, 142.0];        % [pF]
-tau_m = [-45.76, -33.0];   % [ms] should be the opposite of the given value - to fix
-t_ref = [1.65, 1.5];        % [ms]
-E_L = [-40, -45.0];      % [mV]
-Vth = [-30, -36.0];      % [mV]
-Vr = [-50, -55.0];       % = E_L-10 [mV]
+% CA1 PC data from Helene MM paper, control young mice for protocol stim;
+% passive properties from neuroelectro.org
+Cm = [90.0, 142.0];        % [pF]
+tau_m = [-15.0, -33.0];   % [ms] should be the opposite of the given value - to fix
+t_ref = [2.15, 1.5];        % [ms]    ---> to check!
+E_L = [-65, -45.0];      % [mV]
+Vth = [-48, -36.0];      % [mV]
+Vr = [-55, -55.0];       % = E_L-10 [mV] ---> could it be correct (Vth - AHP amplitude) for hippocampus?
 
 
 % Step 2: set the target input-output (Istim-firing frequency) relationship from literature stimulation protocols
@@ -46,46 +48,46 @@ sd_IF = [0, 6.0];     % Standard Deviation of intrinsic frequency (!SE is report
 % for the nn neurons considered for optimization
 % * mean target frequency during depolarization m_Fdep = [3xnn] in [Hz]
 % * SD of target frequency during depolarization sd_Fdep = [3xnn] in [Hz]
-Istim = [Cm(i)*[1.5; 2.1; 2.7], ...     % DCN_gly [GlyT2+ neurons, UUsisaari 2009]
-        Cm(i)*[1.0; 2.0; 3.0]];      % DCN - [Uusisaari et al., 2007 - Fig. 7]
+Istim = [[100.0; 200.0; 300.0], ...     % Helene paper Table 1
+         Cm(i)*[1.0; 2.0; 3.0]];      % DCN - [Uusisaari et al., 2007 - Fig. 7]
 
-% Computation of istantaneous frequencies starting from mean frequencies
-f_mean = [16.0, 27.0, 40.0, 48.0, 65.0]; % from Uusisaari 2009
-I_stim = [1.5, 1.8, 2.1, 2.4, 2.7]; % from Uusisaari 2009
-coeff = polyfit(I_stim,f_mean,1);
-x = linspace(I_stim(1),I_stim(end),1000);
-x0 = 2.4; % (pA/pF) SFA test and stimulation value taken from Uusisaari 2009
-y0 = 100; % (Hz) SFA test and stimulation value taken from Uusisaari 2009
-y = coeff(1)*(x-x0)+y0;
+% % Computation of istantaneous frequencies starting from mean frequencies
+% f_mean = [16.0, 27.0, 40.0, 48.0, 65.0]; % from Uusisaari 2009
+% I_stim = [1.5, 1.8, 2.1, 2.4, 2.7]; % from Uusisaari 2009
+% coeff = polyfit(I_stim,f_mean,1);
+% x = linspace(I_stim(1),I_stim(end),1000);
+% x0 = 2.4; % (pA/pF) SFA test and stimulation value taken from Uusisaari 2009
+% y0 = 100; % (Hz) SFA test and stimulation value taken from Uusisaari 2009
+% y = coeff(1)*(x-x0)+y0;
+% 
+% f_ist = zeros(3,1);
+% f_ist(1) = y(1); % 1.5pA/pF
+% f_ist(3) = y(end); % 2.7pA/pF
+% x_possible = find(x<=2.1);
+% f_ist(2) = y(x_possible(end)); % 2.1pA/pF
+% 
+% f_mean = [16.0; 40.0; 65.0]; % If we want to optimize considering mean frequencies
+% 
+% f_ist = [32;100;130];
 
-f_ist = zeros(3,1);
-f_ist(1) = y(1); % 1.5pA/pF
-f_ist(3) = y(end); % 2.7pA/pF
-x_possible = find(x<=2.1);
-f_ist(2) = y(x_possible(end)); % 2.1pA/pF
-
-f_mean = [16.0; 40.0; 65.0]; % If we want to optimize considering mean frequencies
-
-f_ist = [32;100;130];
-
-m_Fdep = [round(f_ist)...
+m_Fdep = [[47.7; 90.8; 125.2]...               % Frequency of first ISI - mean
           [50.0; 80.0; 110.0]];
 
-sd_Fdep = [[5.0; 10.0; 15.0]...
+sd_Fdep = [[4.8; 6.6; 6.2]...
            [2.0; 5.0; 15.0]];
 
 % Target frequency at the end of a depolarization step should take into account SFA,
 % using the parameter SFA_gain = ratio between initial and steady-state firing rate [nnx3]
 % (it should be set to 1 if no SFA is present)
-SFA_gain = [2.5, 2.5, 2.5; ...
+SFA_gain = [2.0, 2.4, 3.0; ...
             1.2, 1.2, 1.2];
 
 % Hyperpolarization phase:
 % * input current Iinh [pA]
 % * minimum Vm value during hyperpolarization Vinh_min [mV]
 % * steady-state Vm value during hyperpolarization Vinh_ss [mV]
-Iinh = [-Cm(i)*1.5, -Cm(i)*1.5]; % valori inventati da me
-Vinh_min = [-105, -110];
+Iinh = [-100.0, -Cm(i)*1.5]; % values to check - from Fig. 3
+Vinh_min = [-95, -110];
 Vinh_ss = [-90, -95];
 
 % Following hyperpolarization, a rebound burst is present in some neuron types
@@ -292,9 +294,9 @@ param3_high = 3/t_ref(i);
 global par cf w con error_all
 w = 1;          % The weight to consider whether Vm reaches the threshold or not
 % low = K_adap, K2, A2, K1, A1, I_e
-low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.00001,0.001,3/((1/m_IF(i))*1000),0.001,-150];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
+low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.00001,0.001,3/((1/m_IF(i))*1000),0.001,0.001];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
 up_2 = 10*low(2);
-up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,100,3/t_ref(i),600,-50];
+up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,500,3/t_ref(i),500,500];
 
 % low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.025,0.001,3/((1/m_IF(i))*1000),0.001,-150];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
 % up_2 = 5*low(2);
@@ -342,7 +344,7 @@ for nopt = 1:10
     
 % % Separating linear and non linear constraints - error on area Vm
     [param_all,fval_all] = ...
-    fmincon(@(param)objfun_eglif_gly(param,low,up,equs,[1.2 1/2 1/4 1/6 1.1 1 1.1 1.1 1 1 1 1 1],Istim,i,T_tonic, Tdep, Tburst, Tlb, t_ref, SFA_gain,tau_m, Cm,E_L,Vth,Vr,Sp,L2,L3,Iinh(i),Tahp,Vinh_ss),start_param,...
+    fmincon(@(param)objfun_eglif(param,low,up,equs,[1.2 1/2 1/4 1/6 1.1 1 1.1 1.1 1 1 1 1 1],Istim,i,T_tonic, Tdep, Tburst, Tlb, t_ref, SFA_gain,tau_m, Cm,E_L,Vth,Vr,Sp,L2,L3,Iinh(i),Tahp,Vinh_ss),start_param,...
         A,b,Aeq,beq,lb,ub,@(param)confun_eglif(param,low,up,i,Iinh,Cm,tau_m,E_L,Vth, Vinh_ss,t_ref,L2, L3, Sp, T_tonic, Istim,V1,V2,Vss, T_dep3, SFA_gain, Iahp1, Iahp2, Iahp3),options);
 
     parametri{nopt} = par;
@@ -362,8 +364,8 @@ end
 
 
 % Saving optimization data
-save param_new_optim_33.mat parametri
-save cost_new_optim_33.mat cost_function
-save init_par_new_optim_33.mat par_init
-save constr_new_optim_33.mat constraints
-save err_all_new_optim_33.mat err_all
+save param_CA1PC.mat parametri
+save cost_CA1PC.mat cost_function
+save init_CA1PC.mat par_init
+save constr_CA1PC.mat constraints
+save err_all_CA1PC.mat err_all
