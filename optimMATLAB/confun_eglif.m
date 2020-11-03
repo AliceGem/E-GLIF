@@ -6,8 +6,7 @@ function [ c, ceq ] = confun_eglif( param, low, up, neu_ind, Iin,  Cm, tau_m, E_
 
     
     syms k_adap k2 Ist A2 k1 A1 Ie t1 tss t
-    m_IF = [60.0 20.0 0.0];        % Mean intrinsic frequency
-
+ 
     % Oscillation parameters
     % Frequency
     delta = (-1/tau_m(neu_ind)-norma(param(2),low(2),up(2)))^2-4*(norma(param(2),low(2),up(2))/tau_m(neu_ind)+norma(param(1),low(1),up(1))/Cm(neu_ind));     % [1/ms^2]
@@ -27,8 +26,8 @@ function [ c, ceq ] = confun_eglif( param, low, up, neu_ind, Iin,  Cm, tau_m, E_
    Vinh_act/abs(Vinh_ss+35)+1;
    
       
- % SS Vm during tonic above Vth
-  Sp_ton/Vth(neu_ind)-1;
+ % SS Vm during tonic below Vth
+  Vth(neu_ind)/Sp_ton-1;
     
 ];
 
