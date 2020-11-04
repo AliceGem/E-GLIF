@@ -1,11 +1,11 @@
 close all
 clc
-clear
-n_sim = 50; % numero di simulazioni
+%clear
+n_sim = 10; % numero di simulazioni
 
 neu=1; % neurone da selezionare tra quelli presenti nella prima colonna dei file
-neu_type = 3;       % 1 = PC; 2 = MLI; 3 = DCN
-neu_names = {'PC','MLI','DCN'};
+neu_type = 3;       % 1 = PC; 2 = MLI; 3 = CA1PC
+neu_names = {'PC','MLI','CA1PC'};
 
 np = 9;     % Numero fasi del protocollo di stimolazione: 9 steps di corrente
 new_freq = 1;
@@ -13,7 +13,7 @@ durata = [10000 1000 1000 1000 1000 1000 1000 1000 1000];    % durata vari stage
 durata2 = [10000 1000 1000 1000 1000 1000 1000 1000 1000];    % Durata degli intervalli in cui calcolare la frequenza per il plot finale
 ep = 3;     % Numero fasi eccitatorie
 
-Istim = [{'400','800','2400'},{'12' ,'24','36'},{'156','218.4','280.8'}];
+Istim = [{'400','800','2400'},{'12' ,'24','36'},{'100','200','300'}];
 
 % PARAMETRI
 % For each neuron we need mean frequency values in each phase
@@ -30,8 +30,8 @@ ns = 5;
 dur_dep = 1000;
 dur_res = 30;       %[ms]
 
-mult = load('eglif_DCN_gly_new_optim_j_1_multimeter-12-0.dat');
-spk = load('eglif_DCN_gly_new_optim_j_1_spikes-11-0.gdf');
+mult = load('eglif_CA1PC_2_multimeter-12-0.dat');
+spk = load('eglif_CA1PC_2_spikes-11-0.gdf');
 
 x = [0:1:length(mult(:,1))-1];
 I = mult(:,end);
@@ -46,8 +46,8 @@ hold on
 plot(mult(:,2),-85+I/32,'r','LineWidth',2)
 hold on
 for sp = 1:length(spk)
-   line([spk(sp,2) spk(sp,2)],[-20 -10],'Color','k','LineWidth',2) 
-   line([spk(sp,2) spk(sp,2)],[mult(1,4)-0.5 -20],'LineStyle','--','Color','k','LineWidth',1) 
+   line([spk(sp,2) spk(sp,2)],[-20 -10],'Color','k','LineWidth',2)
+   line([spk(sp,2) spk(sp,2)],[mult(1,4)-0.5 -20],'LineStyle','--','Color','k','LineWidth',1)
 end
 xlabel('Time [ms]')
 ylabel('V_m [mV]')
@@ -72,8 +72,8 @@ legend({'Idep','Iadap'},'location','southeast')
 
 
 for sm = 1:n_sim
-    mult = load(append('eglif_DCN_gly_new_optim_j_',num2str(sm),'_multimeter-12-0.dat'));
-    spk = load(append('eglif_DCN_gly_new_optim_j_',num2str(sm),'_spikes-11-0.gdf'));
+    mult = load(append('eglif_CA1PC_',num2str(sm),'_multimeter-12-0.dat'));
+    spk = load(append('eglif_CA1PC_',num2str(sm),'_spikes-11-0.gdf'));
     spk_neu = (spk(find(spk(:,1)==neu),2));
 
     % Frequency
@@ -90,7 +90,7 @@ for sm = 1:n_sim
             freq_tonic_neu_ISI(i) = 0;
             freq_tonic_neu(i) = 0;
         end
-        if i == long_phase 
+        if i == long_phase
             if size(spi,1)>1
                  coefvar = std(ISI_neu{i})/mean(ISI_neu{i})
             else
@@ -100,19 +100,19 @@ for sm = 1:n_sim
     end
 
     % SFA new method
-    SFA = [];   
+    SFA = [];
     for i = 1:ep             % Num dep phases
         if(length(ISI_neu{2*i})>2)
             if(length(ISI_neu{2*i})>5)
                 f1s(i) = 1/(mean(ISI_neu{2*i}(end-5:end))*0.001);
             else
                 f1s(i) = 1/(mean(ISI_neu{2*i}(end-2:end))*0.001);
-            end 
+            end
         else
             f1s(i) = 1/(mean(ISI_neu{2*i})*0.001);
         end
         fin(i) = 1/(mean(ISI_neu{2*i}(1))*0.001);
-        SFA=[SFA f1s(i)/fin(i)]; 
+        SFA=[SFA f1s(i)/fin(i)];
     end
 
     % Save the computed paremeters for simulation sim and clear the variables
@@ -122,7 +122,7 @@ for sm = 1:n_sim
     CVs(sm) = coefvar;
     freq_in(sm,:)=fin;
     freq_1s(sm,:)=f1s;
-    SFAs(sm,:) = SFA;  
+    SFAs(sm,:) = SFA;
 end
 
 frequencies_ISI
@@ -132,19 +132,13 @@ frequencies_ISI
 xax = [1:4];
 
 % Plot REFERENCE values from literature, used as targets in optimization
-mean_des = [0 16 40 65];
-sd_des = [0 5 6 7];
-mean_des_end = 0.4.*mean_des(2:end);
-sd_des_end = 0.4.*sd_des(2:end);
 
-mean_des = [0 64 88 112];
-sd_des = [0 5 10 15];
-if(new_freq)
-    mean_des = [0 32 100 130];
-end
+mean_des = [0 47.7 90.8 125.2];
+sd_des = [0 4.8 6.6 6.2];
 
-mean_des_end = 0.4.*mean_des(2:end);
-sd_des_end = 0.4.*sd_des(2:end);
+
+mean_des_end = [23.7 30.8 41.9];
+sd_des_end = [1.3 1.5 0.9];
 
 figure
 plot(xax,mean_des,'go','MarkerFaceColor','g')
@@ -245,4 +239,3 @@ errorbar(xax,mean_des,sd_des,'g','LineStyle','none')
 xlim([0.5 4.5])
 grid on
 title('Mean frequencies')
-
