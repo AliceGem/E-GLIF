@@ -84,20 +84,26 @@ while(n_simulation < 10):
     # step, which is explained in the third section.
 
     # param_all =  K_adap, K2, A2, K1, A1, I_e
-    param_all = [0.9501,    0.0469,   79.8650,    0.5759,  600.0000, -116.8147] # new_ottim protocol 31 MEDIAN (lambda 1.5 e tau 1.0)
+    #optim1
+    #param_all = [3.3313, 0.3556, 351.3812, 0.6634, 168.2647, -56.6884 ] #  last nopt (lambda 1.5 e tau 1.0)
+    param_all = [3.4178, 0.3265, 283.0757, 1.2063, 62.5273, 70.3318] # median
+    param_all = [2.0178, 0.2265, 13.0757, 1.2063, 32.5273, -30.0] # median with trial and error
+    # param_all = [4.3029, 0.4314, 496.0874, 0.0007, 102.9319, 55.1788]         # optim7 with min cost and all constr negative
+    #param_all = [4.3029, 0.4314, 96.0874, 0.0007, 102.9319, -10.1788]         # trial and error from optim7 with min cost and all constr negative
+
 
     param_CA1PC = {'t_ref': 2.15, 'C_m': 90.0, 'tau_m': 15.0, 'V_th': -48.0, 'V_reset': -55.0,'E_L': -65.0}
 
     eglif_cond_alpha_multisyn = {
-                    "t_ref": param_CA1PC{'t_ref'},
-                    "C_m": param_CA1PC{'C_m'},
-                    "V_th": param_CA1PC{'V_th'},
-                    "V_reset": param_CA1PC{'V_reset'},
-                    "E_L": param_CA1PC{'E_L'},
-                    "Vinit": param_CA1PC{'E_L'},
-                    "lambda_0": 1.5,
-                    "tau_V": 1.0,
-                    "tau_m": param_CA1PC{'tau_m'},
+                    "t_ref": param_CA1PC['t_ref'],
+                    "C_m": param_CA1PC['C_m'],
+                    "V_th": param_CA1PC['V_th'],
+                    "V_reset": param_CA1PC['V_reset'],
+                    "E_L": param_CA1PC['E_L'],
+                    "Vinit": param_CA1PC['E_L'],
+                    "lambda_0": 1.1,
+                    "tau_V": 0.7,
+                    "tau_m": param_CA1PC['tau_m'],
                     "I_e": param_all[5],
                     "kadap": param_all[0],
                     "k1": param_all[3],
