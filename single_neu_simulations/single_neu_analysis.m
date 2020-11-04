@@ -171,10 +171,12 @@ xlabel('I_s_t_i_m [pA]')
 title(['f-I_s_t_i_m plot ',neu_names{neu_type}])
 
 %% TO ADD for VERIFICATION of EXP DATA
-% 1) check of mean frequencies during stimulation step
-% 2) check of number of spikes during stimulation step
-
-
+% 1) check of mean frequencies during 3 stimulation steps
+% 2) check of number of spikes during 3 stimulation steps
+mean_freq_des_mean = [30.4 47.5 57.3]
+mean_freq_des_sd = [2.0 1.9 1.8]
+spk_count_mean = [11.2 18.3 22.2]
+spk_count_des = [0.8 0.9 0.7]
 %%
 n1 = [];
 n2 = [];
