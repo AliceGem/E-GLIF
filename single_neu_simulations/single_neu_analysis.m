@@ -170,7 +170,12 @@ ylabel('f [Hz]')
 xlabel('I_s_t_i_m [pA]')
 title(['f-I_s_t_i_m plot ',neu_names{neu_type}])
 
+%% TO ADD for VERIFICATION of EXP DATA
+% 1) check of mean frequencies during stimulation step
+% 2) check of number of spikes during stimulation step
 
+
+%%
 n1 = [];
 n2 = [];
 n3 = [];
