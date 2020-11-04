@@ -44,18 +44,16 @@ def remove_files():
 
 remove_files()
 
-os.environ["NEST_MODULE_PATH"] = "/home/massimo/nest-simulator-2.18.0-build/lib/nest"
-os.environ["SLI_PATH"] = "/home/massimo/nest-simulator-2.18.0-build/share/nest/sli"
-os.environ["LD_LIBRARY_PATH"] = "/home/massimo/nest-simulator-2.18.0-build/lib/nest:/home/massimo/bin/lib"
-os.environ["PATH"] = "/home/massimo/bin/bin:/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-os.environ["SPATIALINDEX_C_LIBRARY"] = "/home/massimo/bin/lib/libspatialindex.so"
-os.environ["PYTHONPATH"] = "/home/massimo/extra-cereb-nest/Tests:/opt/amber18/lib/python3.6/site-packages/:/home/massimo/.local/nrn/lib/python:"
-import sys
-sys.path[0] = '/home/massimo/nest-simulator-2.18.0-build/lib/python3.6/site-packages/'
+# os.environ["NEST_MODULE_PATH"] = "/home/massimo/nest-simulator-2.18.0-build/lib/nest"
+# os.environ["SLI_PATH"] = "/home/massimo/nest-simulator-2.18.0-build/share/nest/sli"
+# os.environ["LD_LIBRARY_PATH"] = "/home/massimo/nest-simulator-2.18.0-build/lib/nest:/home/massimo/bin/lib"
+# os.environ["PATH"] = "/home/massimo/bin/bin:/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+# os.environ["SPATIALINDEX_C_LIBRARY"] = "/home/massimo/bin/lib/libspatialindex.so"
+# os.environ["PYTHONPATH"] = "/home/massimo/extra-cereb-nest/Tests:/opt/amber18/lib/python3.6/site-packages/:/home/massimo/.local/nrn/lib/python:"
+# import sys
+# sys.path[0] = '/home/massimo/nest-simulator-2.18.0-build/lib/python3.6/site-packages/'
 
 import nest
-import nest.voltage_trace
-import pylab as pl
 import numpy as np
 import random
 
