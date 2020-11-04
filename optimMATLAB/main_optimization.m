@@ -10,8 +10,8 @@
 % oscillations of the membrane potential (thus, oscillatory not damped solution of the model)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- clear
-% clc
+clear
+clc
 
 % Neurons to optimize.
 % In this example:
@@ -294,9 +294,9 @@ param3_high = 3/t_ref(i);
 global par cf w con error_all
 w = 1;          % The weight to consider whether Vm reaches the threshold or not
 % low = K_adap, K2, A2, K1, A1, I_e
-low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.00001,0.001,3/((1/m_IF(i))*1000),0.001,0.001];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
+low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.00001,0.001,3/((1/m_IF(i))*1000),0.001,-100.0];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
 up_2 = 10*low(2);
-up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,500,3/t_ref(i),500,500];
+up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,500,3/t_ref(i),500,100];
 
 % low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.025,0.001,3/((1/m_IF(i))*1000),0.001,-150];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
 % up_2 = 5*low(2);
@@ -311,8 +311,8 @@ up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,500,3/t_ref(i),500,500];
 % b = [0;low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
 % A = [0 0 (up(3)-low(3)) 0 -(up(5)-low(5)) 0;(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
 % b = [low(5)-low(3);low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
-A = [(low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
-b = [low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
+A = [0 0 1 0 -1 0; (low(1)-up(1)) (-Cm(i)/tau_m(i))*(up(2)-low(2)) 0 0 0 0];
+b = [0; low(1)+(Cm(i)/tau_m(i))*low(2)-0.000001];
 
 % Linear equality constraints
 Aeq = [];
@@ -369,3 +369,17 @@ save cost_CA1PC.mat cost_function
 save init_CA1PC.mat par_init
 save constr_CA1PC.mat constraints
 save err_all_CA1PC.mat err_all
+
+
+%% Plot optim
+figure(10)
+hold on
+nopt=10
+for i=1:nopt
+    
+    subplot(1,2,1)
+    subplot(1,2,2)
+    plot(cost_function{1,i})
+    legend
+    
+end
