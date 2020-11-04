@@ -163,7 +163,7 @@ while(n_simulation < 10):
     current_amplitude = [0.0,100.0,0.0,200.0,0.0,300.0,0.0,-100.0,0.0]
 
     # Durate intervalli dell'intero protocollo
-    durate = [10, 1, 1, 1, 1, 1, 1, 1, 1]
+    durate = [10, 0.4, 1, 0.4, 1, 0.4, 1, 1, 1]
 
     # Current for CA1PC
     nest.SetStatus(sd,[{"withgid": True, "withtime": True}])
