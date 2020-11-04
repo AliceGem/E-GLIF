@@ -63,12 +63,12 @@ nest.Install("cerebmodule")
 nest.set_verbosity("M_WARNING")
 
 n_simulation = 0
-while(n_simulation < 50):
+while(n_simulation < 10):
     n_simulation += 1
     nest.ResetKernel()
     nest.SetKernelStatus({"overwrite_files": True,				# Parameters for writing on files
-                        "data_path": "/home/massimo/Scrivania/prove_alice_eglif_dcn",
-                        "data_prefix": "eglif_DCN_gly_new_optim_j_"+str(n_simulation)+'_'})
+                        "data_path": "/home/nrp/workspace/E-GLIF/single_neu_simulations/CA1PC_sim",
+                        "data_prefix": "eglif_CA1PC_"+str(n_simulation)+'_'})
 
     random.seed()
     seed = random.randint(10, 10000)
@@ -88,17 +88,18 @@ while(n_simulation < 50):
     # param_all =  K_adap, K2, A2, K1, A1, I_e
     param_all = [0.9501,    0.0469,   79.8650,    0.5759,  600.0000, -116.8147] # new_ottim protocol 31 MEDIAN (lambda 1.5 e tau 1.0)
 
+    param_CA1PC = {'t_ref': 2.15, 'C_m': 90.0, 'tau_m': 15.0, 'V_th': -48.0, 'V_reset': -55.0,'E_L': -65.0}
 
     eglif_cond_alpha_multisyn = {
-                    "t_ref": 1.65,
-                    "C_m": 104.0,
-                    "V_th": -30.0,
-                    "V_reset": -50.0,
-                    "E_L": -40.0,
-                    "Vinit": -40.0,
+                    "t_ref": param_CA1PC{'t_ref'},
+                    "C_m": param_CA1PC{'C_m'},
+                    "V_th": param_CA1PC{'V_th'},
+                    "V_reset": param_CA1PC{'V_reset'},
+                    "E_L": param_CA1PC{'E_L'},
+                    "Vinit": param_CA1PC{'E_L'},
                     "lambda_0": 1.5,
                     "tau_V": 1.0,
-                    "tau_m": 45.76,
+                    "tau_m": param_CA1PC{'tau_m'},
                     "I_e": param_all[5],
                     "kadap": param_all[0],
                     "k1": param_all[3],
@@ -112,9 +113,8 @@ while(n_simulation < 50):
                     "E_rev3": 0.0
     }
 
-    param_dcn = {'t_ref': 1.65, 'C_m': 104.0, 'tau_m': 45.76, 'V_th': -30.0, 'V_reset': -50.0,'E_L': -40.0}
 
-    single_neuron_DCN = nest.Create("eglif_cond_alpha_multisyn")		# Create E-GLIF neuron (then the parameters will define the neuron type)
+    single_neuron_CA1PC = nest.Create("eglif_cond_alpha_multisyn")		# Create E-GLIF neuron (then the parameters will define the neuron type)
 
     # External input current
     num_dc = 9
@@ -122,15 +122,15 @@ while(n_simulation < 50):
     num_step = 10    	# Number of current step in each square wave period - literature protocol
     num_tot = num_freq*num_step
 
-    current_dc_DCN = []
+    current_dc_CA1PC = []
 
 
     for i in range(num_dc):
-        current_dc_DCN.append(1)
+        current_dc_CA1PC.append(1)
 
 
     for i in range(0,num_dc):
-        current_dc_DCN[i] = nest.Create("dc_generator")	# Provide a positive input current (DC)
+        current_dc_CA1PC[i] = nest.Create("dc_generator")	# Provide a positive input current (DC)
 
 
     # Measurement devices
@@ -156,22 +156,21 @@ while(n_simulation < 50):
     # True.
 
     # Experiments linear adaptive neuron model:
-    Cm_DCN = param_dcn['C_m']
-    ratio_current_Cm_DCN = [0.0,1.5,0.0,2.1,0.0,2.7,0.0,-1.5,0.0]
+    current_amplitude = [0.0,100.0,0.0,200.0,0.0,300.0,0.0,-100.0,0.0]
 
     # Durate intervalli dell'intero protocollo
     durate = [10, 1, 1, 1, 1, 1, 1, 1, 1]
 
-    # Current for DCN
+    # Current for CA1PC
     nest.SetStatus(sd,[{"withgid": True, "withtime": True}])
 
     cont = 1
     for i in durate[:num_dc]:
-        nest.SetStatus(current_dc_DCN[cont-1],{'amplitude' :ratio_current_Cm_DCN[cont-1]*Cm_DCN,'start' : (np.sum(durate[:cont-1]))*1000.0, 'stop' : (np.sum(durate[:cont]))*1000.0})
+        nest.SetStatus(current_dc_CA1PC[cont-1],{'amplitude' :current_amplitude[cont-1],'start' : (np.sum(durate[:cont-1]))*1000.0, 'stop' : (np.sum(durate[:cont]))*1000.0})
         cont += 1
 
-    #DCN neuron: instrinsic tonic activity;
-    nest.SetStatus(single_neuron_DCN, eglif_cond_alpha_multisyn)
+    #CA1PC neuron: instrinsic tonic activity;
+    nest.SetStatus(single_neuron_CA1PC, eglif_cond_alpha_multisyn)
 
 
     # Fourth, the neuron is connected to the devices. The command
@@ -185,11 +184,11 @@ while(n_simulation < 50):
     # neuron. The latter semantics is presently not available in NEST.
 
     for i in range(0,num_dc):
-        nest.Connect(current_dc_DCN[i], single_neuron_DCN)
+        nest.Connect(current_dc_CA1PC[i], single_neuron_CA1PC)
 
 
-    nest.Connect(m, single_neuron_DCN)
-    nest.Connect(single_neuron_DCN, sd)
+    nest.Connect(m, single_neuron_CA1PC)
+    nest.Connect(single_neuron_CA1PC, sd)
 
     # Now we simulate the network using `Simulate()`, which takes the
     # desired simulation time in milliseconds.
