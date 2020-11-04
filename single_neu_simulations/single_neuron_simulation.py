@@ -87,7 +87,7 @@ while(n_simulation < 10):
     #optim1
     #param_all = [3.3313, 0.3556, 351.3812, 0.6634, 168.2647, -56.6884 ] #  last nopt (lambda 1.5 e tau 1.0)
     param_all = [3.4178, 0.3265, 283.0757, 1.2063, 62.5273, 70.3318] # median
-    param_all = [2.0178, 0.2265, 13.0757, 1.2063, 32.5273, -30.0] # median with trial and error
+    #param_all = [2.0178, 0.2265, 13.0757, 1.2063, 32.5273, -30.0] # median with trial and error
     # param_all = [4.3029, 0.4314, 496.0874, 0.0007, 102.9319, 55.1788]         # optim7 with min cost and all constr negative
     #param_all = [4.3029, 0.4314, 96.0874, 0.0007, 102.9319, -10.1788]         # trial and error from optim7 with min cost and all constr negative
 
