@@ -70,8 +70,7 @@ for dp = 1:3  % Number of depolarizing phases
 
         area_act_dep(ind,1,dp) = integral(@(t) 0.5*(double(sol1(t,c1,c2,c3,x1,x2,x3,l1,l2,l3,Sp_1))).*(sign(double(sol1(t,c1,c2,c3,x1,x2,x3,l1,l2,l3,Sp_1)))+1),0.0,T{dp}(i,ind));
 
-        error_dep(ind,1,dp) = abs(area_act_dep(ind,1,dp)-0.5*T{dp}(i,ind)*(Vth(i)-E_L(i)));
-        %error_dep(ind,1,dp) = (abs(area_act_dep(ind,1,dp)-0.5*T{dp}(i,ind)*(Vth(i)-E_L(i))))/(0.5*T{dp}(i,ind)*(Vth(i)-E_L(i)));
+        error_dep(ind,1,dp) = (abs(area_act_dep(ind,1,dp)-0.5*T{dp}(i,ind)*(Vth(i)-E_L(i))))/(0.5*T{dp}(i,ind)*(Vth(i)-E_L(i)));
         area_des1(ind,1) = (0.5*T{dp}(i,ind)*(Vth(i)-E_L(i)));
         area_real1(ind,1) = area_act_dep(ind,1,dp);
 
@@ -92,8 +91,7 @@ for dp = 1:3  % Number of depolarizing phases
 
         area_act_dep(ind,2,dp) = integral(@(t) 0.5*(double(sol2(t,c1,c2,c3))).*(sign(double(sol2(t,c1,c2,c3)))+1),0,T{dp}(i,ind)-tref(i));
 
-        error_dep(ind,2,dp) = abs(area_act_dep(ind,2,dp)-0.5*(T{dp}(i,ind)-tref(i))*(Vth(i)-Vr(i)));
-        %error_dep(ind,2,dp) = (abs(area_act_dep(ind,2,dp)-0.5*(T{dp}(i,ind)-tref(i))*(Vth(i)-Vr(i))))/(0.5*(T{dp}(i,ind)-tref(i))*(Vth(i)-Vr(i)));
+        error_dep(ind,2,dp) = (abs(area_act_dep(ind,2,dp)-0.5*(T{dp}(i,ind)-tref(i))*(Vth(i)-Vr(i))))/(0.5*(T{dp}(i,ind)-tref(i))*(Vth(i)-Vr(i)));
         area_des1(ind,2) = (0.5*(T{dp}(i,ind)-tref(i))*(Vth(i)-Vr(i)));
         area_real1(ind,2) = area_act_dep(ind,2,dp);
 
@@ -113,14 +111,13 @@ for dp = 1:3  % Number of depolarizing phases
         
         area_act_dep(ind,3,dp) = integral(@(t) 0.5*(double(sol3(t,c1,c2,c3))).*(sign(double(sol3(t,c1,c2,c3)))+1),0.0,T{dp}(i,ind)*gainSFA(i,dp)-tref(i));
         
-        error_dep(ind,3,dp) = abs(area_act_dep(ind,3,dp)-0.5*(T{dp}(i,ind)*gainSFA(i,dp)-tref(i))*(Vth(i)-Vr(i)));
-        %error_dep(ind,3,dp) = (abs(area_act_dep(ind,3,dp)-0.5*(T{dp}(i,ind)*gainSFA(i,dp)-tref(i))*(Vth(i)-Vr(i))))/(0.5*(T{dp}(i,ind)*gainSFA(i,dp)-tref(i))*(Vth(i)-Vr(i)));
+        error_dep(ind,3,dp) = (abs(area_act_dep(ind,3,dp)-0.5*(T{dp}(i,ind)*gainSFA(i,dp)-tref(i))*(Vth(i)-Vr(i))))/(0.5*(T{dp}(i,ind)*gainSFA(i,dp)-tref(i))*(Vth(i)-Vr(i)));
         area_des1(ind,3) = (0.5*(T{dp}(i,ind)*gainSFA(i,dp)-tref(i))*(Vth(i)-Vr(i)));
         area_real1(ind,3) = area_act_dep(ind,3,dp);
     end
 end
 
-% 2:3 per non considerare la latency del 1° spike
+% 2:3 to not consider 1° spike latency: Gly-I modeled on 1° and last ISI
 
 for p = 2:3
     error_depol1(p) = mean(error_dep(:,p,1).^2);
