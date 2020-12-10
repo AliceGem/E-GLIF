@@ -1,2 +1,4 @@
 *.zip
 eglif_module_old/
+*.bmp
+*.fig
