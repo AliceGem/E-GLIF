@@ -27,22 +27,20 @@ nn = length(neu_names);    % Number of neurons
 % (if not available in papers).
 % Each parameter is saved in an array of values for each neuron
 Cm = [14.6, 142.0];        % [pF]
-tau_m = [-9.125, -33.0];   % [ms] should be the opposite of the given value - to fix
+tau_m = [-9.125, -33.0];   % [ms] should be the opposite of the given value 
 t_ref = [1.59, 1.5];        % [ms]
 E_L = [-68.0, -45.0];      % [mV]
 Vth = [-53.0, -36.0];      % [mV]
 Vr = [-78.0, -55.0];       % = E_L-10 [mV]
 
-m_IF = [8.5 20.0 0.0];        % Mean intrinsic frequency - Lachamp, 2009
-sd_IF = [2.7 0 3.0 0.0];     % SE o Standard deviation intrinsic frequency - Lachamp, 2009 (reports SE over n = 6)
-            
 
 % Step 2: set the target input-output (Istim-firing frequency) relationship from literature stimulation protocols
-% For target frequencies, mean and Standard Deviation (SD) values are considered, in order to fit a distribution
+% For target frequencies, mean and Standard Deviation (SD) values are
+% considered, in order to fit a distribution 
 
 % Intrinsic firing frequency (/autorhythm/spontaneous firing):
-m_IF = [8.5, 30.0];        % Mean intrinsic frequency
-sd_IF = [2.7, 6.0];     % Standard Deviation of intrinsic frequency (!SE is reported in some studies!)
+m_IF = [8.5, 30.0];        % Mean intrinsic frequency - Lachamp, 2009
+sd_IF = [2.7, 6.0];     % Standard Deviation of intrinsic frequency (!SE is reported in some studies!) - Lachamp, 2009 (reports SE over n = 6)
 
 % Depolarization phases:
 % * input current Istim = [3xnn] in [pA], so we use 3 values of input current for 3 depolarazion phases/steps,
@@ -275,10 +273,9 @@ param3_low = 3/((1/(m_IF(i)+3*sd_IF(i)))*1000);
 param3_high = 3/t_ref(i);
 
 % Global variables for saving optimization info
-global par cf w con error_all
-w = 1;          % The weight to consider whether Vm reaches the threshold or not
+global par cf con error_all
 
-low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.000001,0.0001,3/((1/m_IF(i))*1000),0.0001,0.0001];   %k_adap (sicuro >Cm/tau_m^2),k2 (sicuro > 1/tau_m),A2,k1,A1, Ie
+low = [Cm(i)/(tau_m(i)^2)+0.000001,-1/tau_m(i)+0.000001,0.0001,3/((1/m_IF(i))*1000),0.0001,0.0001];   %k_adap (for sure >Cm/tau_m^2),k2 (for sure > 1/tau_m),A2,k1,A1, Ie
 up_2 = 10*low(2);
 up = [((up_2-1/tau_m(i))^2)*Cm(i)/4-0.000001,up_2,10.0,3/t_ref(i),10.0,10.0];
 
