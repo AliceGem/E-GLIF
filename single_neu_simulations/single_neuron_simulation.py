@@ -91,10 +91,10 @@ while(n_simulation < 10):
     # param_all = [4.3029, 0.4314, 496.0874, 0.0007, 102.9319, 55.1788]         # optim1-run7 with min cost and all constr negative
     #param_all = [4.3029, 0.4314, 96.0874, 0.0007, 102.9319, -10.1788]         # trial and error from optim1-run7 with min cost and all constr negative
     param_all = [0.4000, 0.0920, 141.5567, 1.1414, 262.4390, 100.0000]      #median optim2
-    param_all = [0.623, 0.064184852, 315.456, -0.254, 4416.384, 0.0]              # Test fitting Annalisa
+    param_all = [0.623, 0.064184852, 315.456, 0.254, 4416.384, 0.0]              # Test fitting Annalisa
 
     param_CA1PC = {'t_ref': 2.15, 'C_m': 90.0, 'tau_m': 15.0, 'V_th': -48.0, 'V_reset': -55.0,'E_L': -65.0}
-    param_CA1PC = {'t_ref': 2.15, 'C_m': 189.79, 'tau_m': 15.58, 'V_th': 26.0, 'V_reset': -58.5,'E_L': -65.0}     # Test fitting Annalisa
+    param_CA1PC = {'t_ref': 2.15, 'C_m': 189.79, 'tau_m': 15.58, 'V_th': 26.5, 'V_reset': -58.5,'E_L': -65.0}     # Test fitting Annalisa
 
     eglif_cond_alpha_multisyn = {
                     "t_ref": param_CA1PC['t_ref'],
@@ -102,7 +102,7 @@ while(n_simulation < 10):
                     "V_th": param_CA1PC['V_th'],
                     "V_reset": param_CA1PC['V_reset'],
                     "E_L": param_CA1PC['E_L'],
-                    "Vinit": param_CA1PC['E_L'],
+                    "Vinit": -65.0,
                     "lambda_0": 1.0,
                     "tau_V":0.0000000000001,
                     "tau_m": param_CA1PC['tau_m'],
@@ -165,7 +165,7 @@ while(n_simulation < 10):
     current_amplitude = [0.0,200.0,0.0,300.0,0.0,400.0,0.0,-200.0,0.0]
 
     # Durate intervalli dell'intero protocollo
-    durate = [10, 0.4, 1, 0.4, 1, 0.4, 1, 1, 1]
+    durate = [0, 0.4, 1, 0.4, 1, 0.4, 1, 1, 1]
 
     # Current for CA1PC
     nest.SetStatus(sd,[{"withgid": True, "withtime": True}])
