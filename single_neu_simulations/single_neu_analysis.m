@@ -1,4 +1,4 @@
-close all
+%close all
 clc
 %clear
 n_sim = 10; % numero di simulazioni
@@ -30,12 +30,12 @@ ns = 5;
 dur_dep = 1000;
 dur_res = 30;       %[ms]
 
-mult = load('eglif_CA1PC_2_multimeter-12-0.dat');
-spk = load('eglif_CA1PC_2_spikes-11-0.gdf');
+mult = load('eglif_CA1PC_1_multimeter-12-0.dat');
+spk = load('eglif_CA1PC_1_spikes-11-0.gdf');
 
 x = [0:1:length(mult(:,1))-1];
 I = mult(:,end);
-step_values = [I(durata(1)+5) I(sum(durata(1:3))+5) I(sum(durata(1:5))+5)]
+%step_values = [I(durata(1)+5) I(sum(durata(1:3))+5) I(sum(durata(1:5))+5)]
 
 figure;
 plot(mult(:,2),mult(:,3),'k','LineWidth',2)
@@ -45,14 +45,16 @@ plot(mult(:,2),mult(:,4),'--','Color',[7 93 13]/255,'LineWidth',2)
 hold on
 plot(mult(:,2),-85+I/32,'r','LineWidth',2)
 hold on
+%Spikes
 for sp = 1:length(spk)
-   line([spk(sp,2) spk(sp,2)],[-20 -10],'Color','k','LineWidth',2)
-   line([spk(sp,2) spk(sp,2)],[mult(1,4)-0.5 -20],'LineStyle','--','Color','k','LineWidth',1)
+   line([spk(sp,2) spk(sp,2)],[40 50],'Color','k','LineWidth',2)
+   line([spk(sp,2) spk(sp,2)],[mult(1,4)-0.5 40],'LineStyle','--','Color','k','LineWidth',1)
 end
 xlabel('Time [ms]')
 ylabel('V_m [mV]')
 set(gca,'FontSize',12)
 
+xlim([0 100])
 
 figure
 plot(mult(find(mult(:,1)==neu),5),'g')
@@ -69,7 +71,7 @@ end
 
 legend({'Idep','Iadap'},'location','southeast')
 
-
+xlim([0 100])
 
 for sm = 1:n_sim
     mult = load(append('eglif_CA1PC_',num2str(sm),'_multimeter-12-0.dat'));
