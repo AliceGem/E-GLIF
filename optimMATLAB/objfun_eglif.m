@@ -1,3 +1,4 @@
+
 function [ sq_err ] = objfun_eglif( param, low, up, equs, weights, Istim, i, Tton, T, Tb, Tlb, tref, gainSFA, tau_m, Cm, E_L, Vth, Vr, Sp, L2, L3, Iinh,T_ahp, Vhyp_ss,n_optim )
 
 % objfun_eglif compute the sum of squared errors over the depolarizing phases for
@@ -61,11 +62,11 @@ function [ sq_err ] = objfun_eglif( param, low, up, equs, weights, Istim, i, Tto
 
 %        figure; syms tp; ezplot(sol1(tp,c1,c2,c3,x1,x2,x3,l1,l2,l3,Sp_1),0,1000)
 % 		grid on
+
         area_act_ton(ind,1) = integral(@(t) 0.5*(double(sol1(t,c1,c2,c3,x1,x2,x3,l1,l2,l3,Sp_1))).*(sign(double(sol1(t,c1,c2,c3,x1,x2,x3,l1,l2,l3,Sp_1)))+1),0.0,Tton(i,ind));
-%         area_act_ton(ind,1)
-%          Tton(i,ind)
+
 		error_ton(ind,1) = (abs(area_act_ton(ind,1)-0.5*Tton(i,ind)*(Vth(i)-E_L(i))))/(0.5*Tton(i,ind)*(Vth(i)-E_L(i)));
-      %  0.5*Tton(i,ind)*(Vth(i)-E_L(i))
+    
 
  	%	figure; syms tp; ezplot(sol1(tp,c1,c2,c3,x1,x2,x3,l1,l2,l3,Sp_1),[0:1000]); grid on; title('Vm_ton_lat');
 %         vpa(sol1(tp,c1,c2,c3,x1,x2,x3,l1,l2,l3,Sp_1),2)
@@ -148,7 +149,7 @@ function [ sq_err ] = objfun_eglif( param, low, up, equs, weights, Istim, i, Tto
 
 			error_dep(ind,1,dp) = (abs(area_act_dep(ind,1,dp)-0.5*T{dp}(i,ind)*(Vth(i)-E_L(i))))/(0.5*T{dp}(i,ind)*(Vth(i)-E_L(i)));
 			area_des1(ind,1) = (0.5*T{dp}(i,ind)*(Vth(i)-E_L(i)));
-             area_real1(ind,1) = area_act_dep(ind,1,dp);
+            area_real1(ind,1) = area_act_dep(ind,1,dp);
  %          figure; syms tp; ezplot((sol1(tp,c1,c2,c3,x1,x2,x3,l1,l2,l3,Sp_1)),[0 1000]); title(['Lat-dep',num2str(dp),' - Ades ',...
   %               num2str(area_des1(ind,1)),' Areal ',num2str(area_real1(ind,1))])
 %

@@ -18,7 +18,7 @@ function [ c, ceq ] = confun_eglif( param, low, up, neu_ind, Iin,  Cm, tau_m, E_
   c = [
         
 
-        % delta positivo!
+        % delta positive!
   -delta/abs(delta)+0.000001;    
   
   
